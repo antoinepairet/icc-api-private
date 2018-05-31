@@ -466,6 +466,12 @@ class IccDocumentXApi extends iccDocumentApi {
 		}) : this.crypto.initObjectDelegations(document, null, user.healthcarePartyId, null).then(initData => _.extend(document, { delegations: initData.delegations }));
 	}
 
+    findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys) {
+        return new Promise(function (resolve, reject) {
+            reject(console.log('findByHCPartyPatientSecretFKeys not implemented in document API!'));
+        });
+    }
+
 	/**
   * 1. Check whether there is a delegation with 'hcpartyId' or not.
   * 2. 'fetchHcParty[hcpartyId][1]': is encrypted AES exchange key by RSA public key of him.
