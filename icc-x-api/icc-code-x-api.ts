@@ -1,53 +1,18 @@
-<link rel="import" href="../../../bower_components/polymer/polymer.html">
+import { iccCodeApi } from "../icc-api/iccApi";
+import { HOST, HEADERS } from "../config";
 
-<dom-module id="icc-code-x-api">
-    <template>
-        <style>
-        </style>
-    </template>
-</dom-module>
+import * as codeLanguages from './rsrc/codelng.json';
+import * as icd10 from './rsrc/icd10.json';
 
-<script>
-class IccCodeXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
-	static get is() {
-		return 'icc-code-x-api';
-	}
+import * as _ from "lodash";
 
-	static get properties() {
-		return {
-			api: {
-				type: Object
-			},
-			crypto: {
-				type: Object
-			},
-			icd10: {
-				type: Object,
-				value: function () {
-					return require('./rsrc/icd10.json');
-				}
-			},
-			codeLanguages: {
-				type: Object,
-				value: function () {
-					return require('./rsrc/codelng.json');
-				}
-			}
-		};
-	}
+export class IccCodeXApi extends iccCodeApi {
+
+    icd10: any = icd10;
+    codeLanguages: any = codeLanguages;
 
 	constructor() {
-		super();
-	}
-
-	init() {
-		this.baseApi = this.api.code();
-		const proto = Object.getPrototypeOf(this.baseApi);
-		Object.getOwnPropertyNames(proto).forEach(p => {
-			if (p !== 'constructor' && p !== 'handleError' && proto[p] && typeof proto[p] === 'function') {
-				this[p] = this.baseApi[p].bind(this.baseApi);
-			}
-		});
+        super(HOST, HEADERS);
 	}
 
 	icdChapters(listOfCodes) {
@@ -61,7 +26,7 @@ class IccCodeXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
 			const shortKey = v[0].substr(0, 2);
 			(a[shortKey] || (a[shortKey] = { code: shortKey, descr: v[1], subCodes: [] })).subCodes.push(k);
 			return a;
-		}, {})), c => c.shortKey));
+		}, {})), (c: any) => c.shortKey));
 	}
 
 	languageForType(type, lng) {
@@ -74,6 +39,3 @@ class IccCodeXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
 	}
 
 }
-
-customElements.define(IccCodeXApi.is, IccCodeXApi);
-</script>

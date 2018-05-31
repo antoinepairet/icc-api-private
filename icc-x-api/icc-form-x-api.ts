@@ -1,40 +1,15 @@
-	<link rel="import" href="../../../bower_components/polymer/polymer.html">
+import { iccFormApi } from "../icc-api/iccApi";
+import { IccCryptoXApi } from "./icc-crypto-x-api";
+import { HOST, HEADERS } from "../config";
 
-	<dom-module id="icc-form-x-api">
-		<template>
-			<style>
-			</style>
-		</template>
-	</dom-module>
+import * as _ from 'lodash';
 
-	<script>class IccFormXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
-	static get is() {
-		return 'icc-form-x-api';
-	}
+class IccFormXApi extends iccFormApi {
 
-	static get properties() {
-		return {
-			api: {
-				type: Object
-			},
-			crypto: {
-				type: Object
-			}
-		};
-	}
+    crypto = new IccCryptoXApi();
 
 	constructor() {
-		super();
-	}
-
-	init() {
-		this.baseApi = this.api.form();
-		const proto = Object.getPrototypeOf(this.baseApi);
-		Object.getOwnPropertyNames(proto).forEach(p => {
-			if (p !== 'constructor' && p !== 'handleError' && proto[p] && typeof proto[p] === 'function') {
-				this[p] = this.baseApi[p].bind(this.baseApi);
-			}
-		});
+		super(HOST, HEADERS);
 	}
 
 	newInstance(user, patient, c) {
@@ -74,7 +49,7 @@
   * @param patient (Promise)
   */
 	findBy(hcpartyId, patient) {
-		return this.crypto.extractDelegationsSFKs(patient, hcpartyId).then(secretForeignKeys => this.api.form().findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then(forms => this.decrypt(hcpartyId, forms)).then(function (decryptedForms) {
+		return this.crypto.extractDelegationsSFKs(patient, hcpartyId).then(secretForeignKeys => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then(forms => this.decrypt(hcpartyId, forms)).then(function (decryptedForms) {
 			return decryptedForms;
 		});
 	}
@@ -106,6 +81,3 @@
 	}
 
 }
-
-customElements.define(IccFormXApi.is, IccFormXApi);
-</script>

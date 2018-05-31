@@ -1,44 +1,21 @@
-	<link rel="import" href="../../../bower_components/polymer/polymer.html">
+import { iccHelementApi } from '../icc-api/iccApi';
+import { IccContactXApi } from './icc-contact-x-api';
+import { IccCryptoXApi } from "./icc-crypto-x-api";
+import { HOST, HEADERS } from "../config";
 
-	<dom-module id="icc-helement-x-api">
-		<template>
-			<style>
-			</style>
-		</template>
-	</dom-module>
-
-	<script>
 import * as models from '../icc-api/model/models';
-import moment from '../../../bower_components/moment/src/moment';
 
-class IccHelementXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
-	static get is() {
-		return 'icc-helement-x-api';
-	}
+import * as _ from 'lodash';
+import moment from 'moment/src/moment';
 
-	static get properties() {
-		return {
-			api: {
-				type: Object
-			},
-			crypto: {
-				type: Object
-			}
-		};
-	}
+class IccHelementXApi extends iccHelementApi {
+
+    crypto = new IccCryptoXApi();
+    contactApi = new IccContactXApi();
+
 
 	constructor() {
-		super();
-	}
-
-	init() {
-		this.baseApi = this.api.helement();
-		const proto = Object.getPrototypeOf(this.baseApi);
-		Object.getOwnPropertyNames(proto).forEach(p => {
-			if (p !== 'constructor' && p !== 'handleError' && proto[p] && typeof proto[p] === 'function') {
-				this[p] = this.baseApi[p].bind(this.baseApi);
-			}
-		});
+		super(HOST, HEADERS);
 	}
 
 	newInstance(user, patient, h) {
@@ -88,7 +65,7 @@ class IccHelementXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
 			var collatedAesKeys = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
 
-			return this.crypto.decryptDelegationsSFKs(patient.delegations[hcpartyId], collatedAesKeys, patient.id).then(secretForeignKeys => this.api.helement().findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then(helements => this.decrypt(hcpartyId, helements)).then(function (decryptedHelements) {
+			return this.crypto.decryptDelegationsSFKs(patient.delegations[hcpartyId], collatedAesKeys, patient.id).then(secretForeignKeys => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then(helements => this.decrypt(hcpartyId, helements)).then(function (decryptedHelements) {
 				const byIds = {};
 				decryptedHelements.forEach(he => {
 					if (he.healthElementId) {
@@ -98,7 +75,7 @@ class IccHelementXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
 						}
 					}
 				});
-				return _.values(byIds).filter(s => !s.endOfLife);
+				return _.values(byIds).filter((s: any) => !s.endOfLife);
 			});
 		}.bind(this));
 	}
@@ -136,7 +113,7 @@ class IccHelementXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
 			modified: heSvc.modified, created: heSvc.created,
 			codes: heSvc.codes, tags: heSvc.tags
 		}).then(he => {
-			return this.baseApi.createHealthElement(he);
+			return this.createHealthElement(he);
 		});
 	}
 
@@ -146,6 +123,3 @@ class IccHelementXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
 	}
 
 }
-
-customElements.define(IccHelementXApi.is, IccHelementXApi);
-</script>

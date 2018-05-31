@@ -1,41 +1,15 @@
-	<link rel="import" href="../../../bower_components/polymer/polymer.html">
+import { iccPatientApi } from "../icc-api/iccApi";
+import { IccCryptoXApi } from "./icc-crypto-x-api";
+import { HOST, HEADERS } from "../config";
 
-	<dom-module id="icc-patient-x-api">
-		<template>
-			<style>
-			</style>
-		</template>
-	</dom-module>
+import * as _ from 'lodash';
 
-	<script>class IccPatientXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
-	static get is() {
-		return 'icc-patient-x-api';
-	}
+class IccPatientXApi extends iccPatientApi {
 
-	static get properties() {
-		return {
-			api: {
-				type: Object
-			},
-			crypto: {
-				type: Object
-			}
-		};
-	}
+    crypto = new IccCryptoXApi();
 
 	constructor() {
-		super();
-	}
-
-	init() {
-		this.baseApi = this.api.patient();
-
-		const proto = Object.getPrototypeOf(this.baseApi);
-		Object.getOwnPropertyNames(proto).forEach(p => {
-			if (p !== 'constructor' && p !== 'handleError' && proto[p] && typeof proto[p] === 'function') {
-				this[p] = this.baseApi[p].bind(this.baseApi);
-			}
-		});
+		super(HOST, HEADERS);
 	}
 
 	newInstance(user, p) {
@@ -60,6 +34,3 @@
 	}
 
 }
-
-customElements.define(IccPatientXApi.is, IccPatientXApi);
-</script>

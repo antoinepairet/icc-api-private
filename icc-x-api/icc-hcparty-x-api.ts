@@ -1,52 +1,21 @@
-	<link rel="import" href="../../../bower_components/polymer/polymer.html">
+import { iccHcpartyApi } from "../icc-api/iccApi";
+import { HOST, HEADERS } from "../config";
 
-	<dom-module id="icc-hcparty-x-api">
-		<template>
-			<style>
-			</style>
-		</template>
-	</dom-module>
+import * as i18n from "./rsrc/contact.i18n.json";
 
-	<script>class IccHcpartyXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
-	static get is() {
-		return 'icc-hcparty-x-api';
-	}
+import * as _ from 'lodash';
 
-	static get properties() {
-		return {
-			api: {
-				type: Object
-			},
-			crypto: {
-				type: Object
-			},
-			hcPartyKeysCache: {
-				type: Object,
-				value: () => ({})
-			}
-		};
-	}
 
-	constructor() {
-		super();
-	}
+export class IccHcpartyXApi extends iccHcpartyApi {
 
-	init() {
-		this.baseApi = this.api.hcparty();
-		const proto = Object.getPrototypeOf(this.baseApi);
-		Object.getOwnPropertyNames(proto).forEach(p => {
-			if (p !== 'constructor' && p !== 'handleError' && proto[p] && typeof proto[p] === 'function') {
-				this[p] = this.baseApi[p].bind(this.baseApi);
-			}
-		});
-	}
+    hcPartyKeysCache: Object = {};
 
-	getHcPartyKeysForDelegate(healthcarePartyId) {
-		const cached = this.hcPartyKeysCache[healthcarePartyId];
-		return cached ? Promise.resolve(cached) : this.api.hcparty().getHcPartyKeysForDelegate(healthcarePartyId).then(r => this.hcPartyKeysCache[healthcarePartyId] = r);
-	}
+    constructor() {
+        super(HOST, HEADERS);
+    }
 
+    getHcPartyKeysForDelegate(healthcarePartyId) {
+        const cached = this.hcPartyKeysCache[healthcarePartyId];
+        return cached ? Promise.resolve(cached) : this.getHcPartyKeysForDelegate(healthcarePartyId).then(r => this.hcPartyKeysCache[healthcarePartyId] = r);
+    }
 }
-
-customElements.define(IccHcpartyXApi.is, IccHcpartyXApi);
-</script>

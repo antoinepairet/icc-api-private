@@ -1,50 +1,19 @@
-<link rel="import" href="../../../bower_components/polymer/polymer.html">
+import { iccContactApi } from "../icc-api/iccApi";
+import { IccCryptoXApi } from "../icc-x-api/icc-crypto-x-api";
+import { HOST, HEADERS } from "../config";
 
-<dom-module id="icc-contact-x-api">
-	<template>
-		<style>
-		</style>
-	</template>
-</dom-module>
+import * as i18n from "./rsrc/contact.i18n.json";
 
-<script>
 import moment from 'moment/src/moment';
-import _ from 'lodash/lodash';
+import * as _ from 'lodash';
 
-class IccContactXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
-	static get is() {
-		return 'icc-contact-x-api';
-	}
+export class IccContactXApi extends iccContactApi {
 
-	static get properties() {
-		return {
-			api: {
-				type: Object
-			},
-			crypto: {
-				type: Object
-			},
-			i18n: {
-				type: Object,
-				value: function () {
-					return require('./rsrc/contact.i18n.json');
-				}
-			}
-		};
-	}
+	i18n: any = i18n;
+	crypto = new IccCryptoXApi();
 
 	constructor() {
-		super();
-	}
-
-	init() {
-		this.baseApi = this.api.contact();
-		const proto = Object.getPrototypeOf(this.baseApi);
-		Object.getOwnPropertyNames(proto).forEach(p => {
-			if (p !== 'constructor' && p !== 'handleError' && proto[p] && typeof proto[p] === 'function') {
-				this[p] = this.baseApi[p].bind(this.baseApi);
-			}
-		});
+		super(HOST, HEADERS);
 	}
 
 	newInstance(user, patient, c) {
@@ -89,7 +58,7 @@ class IccContactXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
   */
 	findBy(hcpartyId, patient) {
 		return this.crypto.extractDelegationsSFKs(patient, hcpartyId)
-			.then(secretForeignKeys => this.api.contact().findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(',')))
+			.then(secretForeignKeys => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(',')))
 			.then(contacts => this.decrypt(hcpartyId, contacts))
 			.then(function (decryptedContacts) {
 				return decryptedContacts;
@@ -152,7 +121,7 @@ class IccContactXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
 				s.contactId = c.id;
 			}
 		}));
-		return _.values(byIds).filter(s => !s.deleted && !s.endOfLife);
+		return _.values(byIds).filter((s: any) => !s.deleted && !s.endOfLife);
 	}
 
 	//Return a promise
@@ -340,6 +309,3 @@ class IccContactXApi extends Polymer.mixinBehaviors([], Polymer.Element) {
 	}
 
 }
-
-customElements.define(IccContactXApi.is, IccContactXApi);
-</script>
