@@ -16,6 +16,6 @@ export class IccHcpartyXApi extends iccHcpartyApi {
 
     getHcPartyKeysForDelegate(healthcarePartyId) {
         const cached = this.hcPartyKeysCache[healthcarePartyId];
-        return cached ? Promise.resolve(cached) : this.getHcPartyKeysForDelegate(healthcarePartyId).then(r => this.hcPartyKeysCache[healthcarePartyId] = r);
+        return cached ? Promise.resolve(cached) : super.getHcPartyKeysForDelegate(healthcarePartyId).then(r => this.hcPartyKeysCache[healthcarePartyId] = r);
     }
 }
