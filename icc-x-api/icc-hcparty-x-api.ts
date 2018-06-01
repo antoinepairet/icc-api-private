@@ -1,7 +1,7 @@
 import { iccHcpartyApi } from "../icc-api/iccApi";
 import { HOST, HEADERS } from "../config";
 
-import * as i18n from "./rsrc/contact.i18n.json";
+import * as i18n from './rsrc/contact.i18n';
 
 import * as _ from 'lodash';
 

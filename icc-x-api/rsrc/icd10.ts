@@ -1,4 +1,4 @@
-{
+export default {
 	"A00-B99": {
 		"en": "Infectious and parasitic",
 		"fr": "Infections & parasites",
@@ -97,4 +97,4 @@
 		"en": "General health status",
 		"fr": "Etat général","colour": "ICD-10--other"
 	}
-}
+};

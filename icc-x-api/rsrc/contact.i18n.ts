@@ -1,4 +1,4 @@
-{
+export default {
 	"fr": {
 		"package":"boîte",
 		"packages":"boîtes",
@@ -60,4 +60,4 @@
 		"at":"at"
 	}
 
-}
+};

@@ -2,7 +2,7 @@ import { iccContactApi } from "../icc-api/iccApi";
 import { IccCryptoXApi } from "../icc-x-api/icc-crypto-x-api";
 import { HOST, HEADERS } from "../config";
 
-import * as i18n from "./rsrc/contact.i18n.json";
+import * as i18n from "./rsrc/contact.i18n";
 
 import moment from 'moment/src/moment';
 import * as _ from 'lodash';
