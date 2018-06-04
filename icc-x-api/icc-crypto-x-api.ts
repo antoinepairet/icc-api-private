@@ -1,4 +1,4 @@
-import { IccHcpartyXApi } from './icc-hcparty-x-api';
+import * as api from '../icc-api/iccApi';
 
 import { AES } from './crypto/AES';
 import { RSA } from './crypto/RSA';
@@ -6,18 +6,17 @@ import { utils } from './crypto/utils';
 
 import * as _ from 'lodash';
 
-export class IccCryptoXApi {
+export class IccCryptoXApi extends api.iccHcpartyApi {
 
     hcPartyKeysCache: Object = {};
     keychainLocalStoreIdPrefix: String = 'org.taktik.icure.ehealth.keychain.';
     
-	hcpartyApi = new IccHcpartyXApi();
-	
 	AES: any = AES;
 	RSA: any = RSA;
 	utils: any = utils;
 
-	constructor() {
+	constructor(host, headers) {
+		super(host, headers);
         this.AES.utils = this.utils;
         this.RSA.utils = this.utils;
 	}
@@ -52,7 +51,7 @@ export class IccCryptoXApi {
 	}
 
 	decryptAndImportAesHcPartyKeysForDelegators(delegatorsHcPartyIdsSet, delegateHcPartyId) {
-		return this.hcpartyApi.getHcPartyKeysForDelegate(delegateHcPartyId).then(function (healthcarePartyKeys) {
+		return this.getHcPartyKeysForDelegate(delegateHcPartyId).then(function (healthcarePartyKeys) {
 			// For each delegatorId, obtain the AES keys
 			return Promise.all(delegatorsHcPartyIdsSet.map(delegatorId => this.decryptHcPartyKey(delegatorId, delegateHcPartyId, healthcarePartyKeys[delegatorId])));
 		}.bind(this));
@@ -68,7 +67,7 @@ export class IccCryptoXApi {
 
 	initObjectDelegations(createdObject, parentObject, ownerId, secretForeignKeyOfParent) {
 		const secretId = this.randomUuid();
-		return this.hcpartyApi.getHealthcareParty(ownerId).then(owner => owner.hcPartyKeys[ownerId][0]).then(encryptedHcPartyKey => this.decryptHcPartyKey(ownerId, ownerId, encryptedHcPartyKey, true)).then(importedAESHcPartyKey => Promise.all([this.AES.encrypt(importedAESHcPartyKey.key, this.utils.text2ua(createdObject.id + ":" + secretId)), parentObject ? this.AES.encrypt(importedAESHcPartyKey.key, this.utils.text2ua(createdObject.id + ":" + parentObject.id)) : Promise.resolve(null)])).then(encryptedDelegationAndSecretForeignKey => ({
+		return this.getHealthcareParty(ownerId).then(owner => owner.hcPartyKeys[ownerId][0]).then(encryptedHcPartyKey => this.decryptHcPartyKey(ownerId, ownerId, encryptedHcPartyKey, true)).then(importedAESHcPartyKey => Promise.all([this.AES.encrypt(importedAESHcPartyKey.key, this.utils.text2ua(createdObject.id + ":" + secretId)), parentObject ? this.AES.encrypt(importedAESHcPartyKey.key, this.utils.text2ua(createdObject.id + ":" + parentObject.id)) : Promise.resolve(null)])).then(encryptedDelegationAndSecretForeignKey => ({
 			delegations: _.fromPairs([[ownerId, [{ owner: ownerId, delegatedTo: ownerId, key: this.utils.ua2hex(encryptedDelegationAndSecretForeignKey[0]) }]]]),
 			cryptedForeignKeys: encryptedDelegationAndSecretForeignKey[1] && _.fromPairs([[ownerId, [{ owner: ownerId, delegatedTo: ownerId, key: this.utils.ua2hex(encryptedDelegationAndSecretForeignKey[1]) }]]]) || {},
 			secretForeignKeys: secretForeignKeyOfParent && [secretForeignKeyOfParent] || [],
@@ -77,7 +76,7 @@ export class IccCryptoXApi {
 	}
 
 	appendObjectDelegations(modifiedObject, parentObject, ownerId, delegateId, secretIdOfModifiedObject) {
-		return this.hcpartyApi.getHealthcareParty(ownerId).then(owner => owner.hcPartyKeys[delegateId][0]).then(encryptedHcPartyKey => this.decryptHcPartyKey(ownerId, delegateId, encryptedHcPartyKey, true)).then(importedAESHcPartyKey => Promise.all([this.AES.encrypt(importedAESHcPartyKey.key, this.utils.text2ua(modifiedObject.id + ":" + secretIdOfModifiedObject)), parentObject ? this.AES.encrypt(importedAESHcPartyKey.key, this.utils.text2ua(modifiedObject.id + ":" + parentObject.id)) : Promise.resolve(null)])).then(encryptedDelegationAndSecretForeignKey => ({
+		return this.getHealthcareParty(ownerId).then(owner => owner.hcPartyKeys[delegateId][0]).then(encryptedHcPartyKey => this.decryptHcPartyKey(ownerId, delegateId, encryptedHcPartyKey, true)).then(importedAESHcPartyKey => Promise.all([this.AES.encrypt(importedAESHcPartyKey.key, this.utils.text2ua(modifiedObject.id + ":" + secretIdOfModifiedObject)), parentObject ? this.AES.encrypt(importedAESHcPartyKey.key, this.utils.text2ua(modifiedObject.id + ":" + parentObject.id)) : Promise.resolve(null)])).then(encryptedDelegationAndSecretForeignKey => ({
 			delegations: _.extend(_.cloneDeep(modifiedObject.delegations), _.fromPairs([[delegateId, (modifiedObject.delegations[delegateId] || []).concat([{
 				owner: ownerId, delegatedTo: delegateId, key: this.utils.ua2hex(encryptedDelegationAndSecretForeignKey[0])
 			}])]])),
@@ -119,7 +118,7 @@ export class IccCryptoXApi {
 	}
 
 	loadKeyPairsAsTextInBrowserLocalStorage(healthcarePartyId, privateKey) {
-		return this.hcpartyApi.getPublicKey(healthcarePartyId).then(function (publicKey) {
+		return this.getPublicKey(healthcarePartyId).then(function (publicKey) {
 			return this.RSA.importKeyPair('jwk', this.utils.pkcs8ToJwk(privateKey), 'jwk', this.utils.spkiToJwk(this.utils.hex2ua(publicKey.hexString)));
 		}.bind(this)).then(function (keyPair) {
 			this.RSA.rsaKeyPairs[healthcarePartyId] = keyPair;
@@ -130,7 +129,7 @@ export class IccCryptoXApi {
 	}
 
 	loadKeyPairsAsJwkInBrowserLocalStorage(healthcarePartyId, privKey) {
-		return this.hcpartyApi.getPublicKey(healthcarePartyId).then(function (publicKey) {
+		return this.getPublicKey(healthcarePartyId).then(function (publicKey) {
 			const pubKey = this.utils.spkiToJwk(this.utils.hex2ua(publicKey.hexString));
 
 			privKey.n = pubKey.n;
