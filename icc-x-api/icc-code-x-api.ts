@@ -1,7 +1,8 @@
 import { iccCodeApi } from "../icc-api/iccApi";
 
-import * as codeLanguages from './rsrc/codelng.json';
-import * as icd10 from './rsrc/icd10.json';
+import * as codeLanguages from './rsrc/codelng';
+import * as icd10 from './rsrc/icd10';
+import * as icpc2 from './rsrc/icpc2';
 
 import * as _ from "lodash";
 
@@ -15,18 +16,30 @@ export class IccCodeXApi extends iccCodeApi {
 	}
 
 	icdChapters(listOfCodes) {
-		return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(c => [c, _.toPairs(this.icd10).find(([k, v]) => {
-			const parts = k.split(/-/);
-			return c.substr(0, 3) >= parts[0] && c.substr(0, 3) <= parts[1];
-		})])), (a, v, k) => {
-			if (!v) {
-				return {};
-			}
-			const shortKey = v[0].substr(0, 2);
-			(a[shortKey] || (a[shortKey] = { code: shortKey, descr: v[1], subCodes: [] })).subCodes.push(k);
-			return a;
-		}, {})), (c: any) => c.shortKey));
-	}
+        return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icd10).find(([k, v]) => {
+            const parts = k.split(/-/);
+            return code.substr(0, 3) >= parts[0] && code.substr(0, 3) <= parts[1];
+        })])), (acc, pairOfRangeAndIcdInfo, code) => {
+            if (!pairOfRangeAndIcdInfo) {
+                return {};
+            }
+            const shortKey = pairOfRangeAndIcdInfo[0].substr(0, 2)
+            ;(acc[shortKey] || (acc[shortKey] = { code: shortKey, descr: pairOfRangeAndIcdInfo[1], subCodes: [] })).subCodes.push(code);
+            return acc;
+        }, {})), c => c.shortKey));
+    }
+
+    icpcChapters(listOfCodes) {
+        return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icpc2).find(([k, v]) => k === code.substr(0,1).toUpperCase())])),
+            (acc, pairOfRangeAndIcdInfo, code) => {
+                if (!pairOfRangeAndIcdInfo) {
+                    return {};
+                }
+                const shortKey = pairOfRangeAndIcdInfo[0]
+                ;(acc[shortKey] || (acc[shortKey] = { code: shortKey, descr: pairOfRangeAndIcdInfo[1], subCodes: [] })).subCodes.push(code);
+                return acc;
+        }, {})), c => c.shortKey));
+    }
 
 	languageForType(type, lng) {
 		const availableLanguages = this.codeLanguages[type];

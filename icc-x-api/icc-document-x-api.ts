@@ -519,7 +519,7 @@ class IccDocumentXApi extends iccDocumentApi {
 	}
 
 	getAttachmentUrl(documentId, attachmentId, sfks) {
-		return this.host + "/document/{documentId}/attachment/{attachmentId}".replace("{documentId}", documentId).replace("{attachmentId}", attachmentId) + (sfks && sfks.length ? '?sfks=' + sfks.join(',') : '');
+        return this.host + "/document/{documentId}/attachment/{attachmentId}".replace("{documentId}", documentId).replace("{attachmentId}", attachmentId) + (sfks && sfks.length ? '?sfks=' + sfks.join(',') : ''); 
 	}
 
 	uti(mimeType) {
