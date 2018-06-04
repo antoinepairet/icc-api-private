@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 
 class IccDocumentXApi extends iccDocumentApi {
 
-    crypto = new IccCryptoXApi();
+    crypto: IccCryptoXApi;
 
     utiRevDefs: Object = {
         "com.adobe.encapsulatedPostscript": "image/eps",
@@ -440,8 +440,9 @@ class IccDocumentXApi extends iccDocumentApi {
         'x-music/x-midi': 'public.midi'
     };
 
-	constructor(host, headers) {
-		super(host, headers);
+	constructor(host, headers, crypto) {
+        super(host, headers);
+        this.crypto = crypto;
 	}
 
 	newInstance(user, patient, c) {

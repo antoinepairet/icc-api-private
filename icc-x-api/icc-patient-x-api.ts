@@ -5,10 +5,11 @@ import * as _ from 'lodash';
 
 class IccPatientXApi extends iccPatientApi {
 
-    crypto = new IccCryptoXApi();
+    crypto: IccCryptoXApi;
 
-	constructor(host, headers) {
+	constructor(host, headers, crypto) {
 		super(host, headers);
+		this.crypto = crypto;
 	}
 
 	newInstance(user, p) {

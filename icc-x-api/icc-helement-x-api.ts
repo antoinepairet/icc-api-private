@@ -9,12 +9,13 @@ import moment from 'moment/src/moment';
 
 class IccHelementXApi extends iccHelementApi {
 
-    crypto = new IccCryptoXApi();
-    contactApi = new IccContactXApi();
+	crypto: IccCryptoXApi;
+    // contactApi = IccContactXApi;  // needed in serviceToHealthElement, but not injected in the upstream code
 
 
-	constructor(host, headers) {
+	constructor(host, headers, crypto) {
 		super(host, headers);
+		this.crypto = crypto;
 	}
 
 	newInstance(user, patient, h) {
@@ -101,20 +102,21 @@ class IccHelementXApi extends iccHelementApi {
 		}.bind(this))));
 	}
 
-	serviceToHealthElement(user, patient, heSvc, language) {
-		return this.newInstance(user, patient, {
-			idService: heSvc.id,
-			author: heSvc.author,
-			responsible: heSvc.responsible,
-			openingDate: heSvc.valueDate || heSvc.openingDate,
-			descr: this.contactApi.shortServiceDescription(heSvc, language),
-			idOpeningContact: heSvc.contactId,
-			modified: heSvc.modified, created: heSvc.created,
-			codes: heSvc.codes, tags: heSvc.tags
-		}).then(he => {
-			return this.createHealthElement(he);
-		});
-	}
+	// this code relies on this.contactApi, which is not injected in the class
+	// serviceToHealthElement(user, patient, heSvc, language) {
+	// 	return this.newInstance(user, patient, {
+	// 		idService: heSvc.id,
+	// 		author: heSvc.author,
+	// 		responsible: heSvc.responsible,
+	// 		openingDate: heSvc.valueDate || heSvc.openingDate,
+	// 		descr: this.contactApi.shortServiceDescription(heSvc, language),
+	// 		idOpeningContact: heSvc.contactId,
+	// 		modified: heSvc.modified, created: heSvc.created,
+	// 		codes: heSvc.codes, tags: heSvc.tags
+	// 	}).then(he => {
+	// 		return this.createHealthElement(he);
+	// 	});
+	// }
 
 	stringToCode(code) {
 		const c = code.split('|');

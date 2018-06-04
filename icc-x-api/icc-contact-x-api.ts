@@ -9,10 +9,11 @@ import * as _ from 'lodash';
 export class IccContactXApi extends iccContactApi {
 
 	i18n: any = i18n;
-	crypto = new IccCryptoXApi();
+	crypto: IccCryptoXApi;
 
-	constructor(host, headers) {
+	constructor(host, headers, crypto) {
 		super(host, headers);
+		this.crypto = crypto;
 	}
 
 	newInstance(user, patient, c) {
