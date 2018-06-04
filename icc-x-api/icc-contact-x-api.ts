@@ -1,6 +1,5 @@
 import { iccContactApi } from "../icc-api/iccApi";
 import { IccCryptoXApi } from "../icc-x-api/icc-crypto-x-api";
-import { HOST, HEADERS } from "../config";
 
 import * as i18n from "./rsrc/contact.i18n";
 
@@ -12,8 +11,8 @@ export class IccContactXApi extends iccContactApi {
 	i18n: any = i18n;
 	crypto = new IccCryptoXApi();
 
-	constructor() {
-		super(HOST, HEADERS);
+	constructor(host, headers) {
+		super(host, headers);
 	}
 
 	newInstance(user, patient, c) {

@@ -1,6 +1,5 @@
 import { iccFormApi } from "../icc-api/iccApi";
 import { IccCryptoXApi } from "./icc-crypto-x-api";
-import { HOST, HEADERS } from "../config";
 
 import * as _ from 'lodash';
 
@@ -8,8 +7,8 @@ class IccFormXApi extends iccFormApi {
 
     crypto = new IccCryptoXApi();
 
-	constructor() {
-		super(HOST, HEADERS);
+	constructor(host, headers) {
+		super(host, headers);
 	}
 
 	newInstance(user, patient, c) {

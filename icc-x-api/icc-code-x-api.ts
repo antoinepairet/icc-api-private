@@ -1,5 +1,4 @@
 import { iccCodeApi } from "../icc-api/iccApi";
-import { HOST, HEADERS } from "../config";
 
 import * as codeLanguages from './rsrc/codelng.json';
 import * as icd10 from './rsrc/icd10.json';
@@ -11,8 +10,8 @@ export class IccCodeXApi extends iccCodeApi {
     icd10: any = icd10;
     codeLanguages: any = codeLanguages;
 
-	constructor() {
-        super(HOST, HEADERS);
+	constructor(host, headers) {
+		super(host, headers);
 	}
 
 	icdChapters(listOfCodes) {

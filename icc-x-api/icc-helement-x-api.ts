@@ -1,7 +1,6 @@
 import { iccHelementApi } from '../icc-api/iccApi';
 import { IccContactXApi } from './icc-contact-x-api';
 import { IccCryptoXApi } from "./icc-crypto-x-api";
-import { HOST, HEADERS } from "../config";
 
 import * as models from '../icc-api/model/models';
 
@@ -14,8 +13,8 @@ class IccHelementXApi extends iccHelementApi {
     contactApi = new IccContactXApi();
 
 
-	constructor() {
-		super(HOST, HEADERS);
+	constructor(host, headers) {
+		super(host, headers);
 	}
 
 	newInstance(user, patient, h) {

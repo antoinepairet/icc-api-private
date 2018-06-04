@@ -1,6 +1,5 @@
 import { iccDocumentApi } from "../icc-api/iccApi";
 import { IccCryptoXApi } from "./icc-crypto-x-api";
-import { HOST, HEADERS } from "../config";
 
 import * as _ from 'lodash';
 
@@ -441,8 +440,8 @@ class IccDocumentXApi extends iccDocumentApi {
         'x-music/x-midi': 'public.midi'
     };
 
-	constructor() {
-		super(HOST, HEADERS);
+	constructor(host, headers) {
+		super(host, headers);
 	}
 
 	newInstance(user, patient, c) {
@@ -520,7 +519,7 @@ class IccDocumentXApi extends iccDocumentApi {
 	}
 
 	getAttachmentUrl(documentId, attachmentId, sfks) {
-		return HOST + "/document/{documentId}/attachment/{attachmentId}".replace("{documentId}", documentId).replace("{attachmentId}", attachmentId) + (sfks && sfks.length ? '?sfks=' + sfks.join(',') : '');
+		return this.host + "/document/{documentId}/attachment/{attachmentId}".replace("{documentId}", documentId).replace("{attachmentId}", attachmentId) + (sfks && sfks.length ? '?sfks=' + sfks.join(',') : '');
 	}
 
 	uti(mimeType) {

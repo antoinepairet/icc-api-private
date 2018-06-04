@@ -1,5 +1,4 @@
 import { iccHcpartyApi } from "../icc-api/iccApi";
-import { HOST, HEADERS } from "../config";
 
 import * as i18n from './rsrc/contact.i18n';
 
@@ -10,8 +9,8 @@ export class IccHcpartyXApi extends iccHcpartyApi {
 
     hcPartyKeysCache: Object = {};
 
-    constructor() {
-        super(HOST, HEADERS);
+    constructor(host, headers) {
+        super(host, headers);
     }
 
     getHcPartyKeysForDelegate(healthcarePartyId) {
