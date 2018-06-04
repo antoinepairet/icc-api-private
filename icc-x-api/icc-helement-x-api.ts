@@ -7,7 +7,7 @@ import * as models from '../icc-api/model/models';
 import * as _ from 'lodash';
 import moment from 'moment/src/moment';
 
-class IccHelementXApi extends iccHelementApi {
+export class IccHelementXApi extends iccHelementApi {
 
 	crypto: IccCryptoXApi;
     // contactApi = IccContactXApi;  // needed in serviceToHealthElement, but not injected in the upstream code

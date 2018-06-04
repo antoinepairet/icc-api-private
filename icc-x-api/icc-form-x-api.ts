@@ -3,7 +3,7 @@ import { IccCryptoXApi } from "./icc-crypto-x-api";
 
 import * as _ from 'lodash';
 
-class IccFormXApi extends iccFormApi {
+export class IccFormXApi extends iccFormApi {
 
     crypto: IccCryptoXApi;
 

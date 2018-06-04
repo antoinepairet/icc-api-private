@@ -3,7 +3,7 @@ import { IccCryptoXApi } from "./icc-crypto-x-api";
 
 import * as _ from 'lodash';
 
-class IccPatientXApi extends iccPatientApi {
+export class IccPatientXApi extends iccPatientApi {
 
     crypto: IccCryptoXApi;
 
