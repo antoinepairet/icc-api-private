@@ -9,6 +9,7 @@ import * as _ from "lodash";
 export class IccCodeXApi extends iccCodeApi {
 
     icd10: any = icd10;
+    icpc2: any = icpc2;
     codeLanguages: any = codeLanguages;
 
 	constructor(host, headers) {
