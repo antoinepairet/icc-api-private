@@ -27,7 +27,7 @@ export class IccCodeXApi extends iccCodeApi {
             const shortKey = pairOfRangeAndIcdInfo[0].substr(0, 2)
             ;(acc[shortKey] || (acc[shortKey] = { code: shortKey, descr: pairOfRangeAndIcdInfo[1], subCodes: [] })).subCodes.push(code);
             return acc;
-        }, {})), c => c.shortKey));
+        }, {})), (c: any) => c.shortKey));
     }
 
     icpcChapters(listOfCodes) {
@@ -39,7 +39,7 @@ export class IccCodeXApi extends iccCodeApi {
                 const shortKey = pairOfRangeAndIcdInfo[0]
                 ;(acc[shortKey] || (acc[shortKey] = { code: shortKey, descr: pairOfRangeAndIcdInfo[1], subCodes: [] })).subCodes.push(code);
                 return acc;
-        }, {})), c => c.shortKey));
+        }, {})), (c: any) => c.shortKey));
     }
 
 	languageForType(type, lng) {
