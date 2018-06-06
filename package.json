@@ -1,5 +1,5 @@
 {
-  "name": "medispring-icc-api",
+  "name": "icc-api",
   "version": "1.0.0",
   "description": "Typescript version of iCure standalone API client",
   "main": "index.js",
@@ -17,12 +17,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/b12consulting/medispring-icc-api.git"
+    "url": "git+https://github.com/b12consulting/icc-api.git"
   },
   "author": "B12 Consulting",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/b12consulting/medispring-icc-api/issues"
+    "url": "https://github.com/b12consulting/icc-api/issues"
   },
-  "homepage": "https://github.com/b12consulting/medispring-icc-api#readme"
+  "homepage": "https://github.com/b12consulting/icc-api#readme"
 }
