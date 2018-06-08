@@ -11,26 +11,35 @@ export module XHR {
     }
 
 export class Data {
-    headers: string;
-    body: JSON|Array<JSON>;
-    text: string;
-    type: string;
-    status: number;
-    statusText: string;
+headers: Array<Header> | string;
+    body: JSON | Array<JSON> | any;//stream bytes|json|array<json>
+        text: string;
+        type: string;
+        status: number;
+        statusText: string;
+        contentType: string;
 
-    constructor(jsXHR: XMLHttpRequest) {
-        this.headers = jsXHR.getAllResponseHeaders();
-        if(jsXHR.responseType == "json" || jsXHR.responseType == ""){
-            this.body = JSON.parse(jsXHR.response);
-        }else{
-            this.body = jsXHR.response;
+        constructor(jsXHR: XMLHttpRequest) {
+        this.headers = jsXHR.getAllResponseHeaders().split("\n").map(h => h.split(": ")).map(head => new Header(head[0], head[1]));
+        this.contentType = "";
+        this.headers.map(head => {
+        if (head.header === 'content-type') {
+        this.contentType = head.data;
+        if (head.data.startsWith("application/json")) {
+        this.body = JSON.parse(jsXHR.response);
+        } else if (head.data.startsWith("application/octet-stream")) {
+        this.body = jsXHR.response;//todo, somethings else
+        } else {
+        this.body = jsXHR.response;//"text/plain"
         }
+        }
+        })
         this.text = jsXHR.responseText;
         this.type = jsXHR.responseType;
         this.status = jsXHR.status;
         this.statusText = jsXHR.statusText;
-    }
-    }
+        }
+        }
 
     function dataFromJSXHR(jsXHR: XMLHttpRequest): Data {
     return new Data(jsXHR);

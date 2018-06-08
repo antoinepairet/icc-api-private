@@ -8,9 +8,10 @@ import * as _ from 'lodash';
 
 export class IccCryptoXApi extends api.iccHcpartyApi {
 
-    hcPartyKeysCache: Object = {};
+	hcPartyKeysCache: Object = {};
+	hcPartyKeysRequestsCache: Object = {};
     keychainLocalStoreIdPrefix: String = 'org.taktik.icure.ehealth.keychain.';
-    
+
 	AES: any = AES;
 	RSA: any = RSA;
 	utils: any = utils;
@@ -51,7 +52,7 @@ export class IccCryptoXApi extends api.iccHcpartyApi {
 	}
 
 	decryptAndImportAesHcPartyKeysForDelegators(delegatorsHcPartyIdsSet, delegateHcPartyId) {
-		return this.getHcPartyKeysForDelegate(delegateHcPartyId).then(function (healthcarePartyKeys) {
+		return (this.hcPartyKeysCache[delegateHcPartyId] || (this.hcPartyKeysCache[delegateHcPartyId] = this.getHcPartyKeysForDelegate(delegateHcPartyId))).then(function (healthcarePartyKeys) {
 			// For each delegatorId, obtain the AES keys
 			return Promise.all(delegatorsHcPartyIdsSet.map(delegatorId => this.decryptHcPartyKey(delegatorId, delegateHcPartyId, healthcarePartyKeys[delegatorId])));
 		}.bind(this));

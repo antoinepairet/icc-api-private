@@ -487,11 +487,18 @@ export class IccDocumentXApi extends iccDocumentApi {
   * @param hcparty
   * @param patient (Promise)
   */
-	findBy(hcpartyId, patient) {
+	findByPatient(hcpartyId, patient) {
 		return this.crypto.extractDelegationsSFKs(patient, hcpartyId).then(secretForeignKeys => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then(documents => this.decrypt(hcpartyId, documents)).then(function (decryptedForms) {
 			return decryptedForms;
 		});
-	}
+    }
+
+    findByMessage(hcpartyId, message) {
+        return this.crypto.extractDelegationsSFKs(message, hcpartyId).then(secretForeignKeys => this.findByHCPartyMessageSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then(documents => this.decrypt(hcpartyId, documents)).then(function (decryptedForms) {
+            return decryptedForms;
+        });
+    }
+
 
 	decrypt(hcpartyId, documents) {
 		return Promise.all(documents.map(document => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, document.delegations).then(function (decryptedAndImportedAesHcPartyKeys) {
