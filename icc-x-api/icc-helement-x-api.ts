@@ -101,22 +101,22 @@ export class IccHelementXApi extends iccHelementApi {
 			});
 		}.bind(this))));
 	}
+	this.contactApi.shortServiceDescription(heSvc, language)
 
-	// this code relies on this.contactApi, which is not injected in the class
-	// serviceToHealthElement(user, patient, heSvc, language) {
-	// 	return this.newInstance(user, patient, {
-	// 		idService: heSvc.id,
-	// 		author: heSvc.author,
-	// 		responsible: heSvc.responsible,
-	// 		openingDate: heSvc.valueDate || heSvc.openingDate,
-	// 		descr: this.contactApi.shortServiceDescription(heSvc, language),
-	// 		idOpeningContact: heSvc.contactId,
-	// 		modified: heSvc.modified, created: heSvc.created,
-	// 		codes: heSvc.codes, tags: heSvc.tags
-	// 	}).then(he => {
-	// 		return this.createHealthElement(he);
-	// 	});
-	// }
+	serviceToHealthElement(user, patient, heSvc, descr) {
+		return this.newInstance(user, patient, {
+			idService: heSvc.id,
+			author: heSvc.author,
+			responsible: heSvc.responsible,
+			openingDate: heSvc.valueDate || heSvc.openingDate,
+			descr: descr,
+			idOpeningContact: heSvc.contactId,
+			modified: heSvc.modified, created: heSvc.created,
+			codes: heSvc.codes, tags: heSvc.tags
+		}).then(he => {
+			return this.createHealthElement(he);
+		});
+	}
 
 	stringToCode(code) {
 		const c = code.split('|');
