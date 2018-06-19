@@ -101,8 +101,7 @@ export class IccHelementXApi extends iccHelementApi {
 			});
 		}.bind(this))));
 	}
-	this.contactApi.shortServiceDescription(heSvc, language)
-
+	
 	serviceToHealthElement(user, patient, heSvc, descr) {
 		return this.newInstance(user, patient, {
 			idService: heSvc.id,
