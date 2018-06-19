@@ -6,7 +6,6 @@ import { utils } from './crypto/utils';
 import * as _ from 'lodash';
 import {XHR} from "../icc-api/api/XHR";
 import * as models from "../icc-api/model/models";
-import {DelegationDto} from "../icc-api/model/DelegationDto";
 
 export class IccCryptoXApi {
 
