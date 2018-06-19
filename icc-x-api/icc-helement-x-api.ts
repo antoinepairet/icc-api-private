@@ -5,7 +5,8 @@ import { IccCryptoXApi } from "./icc-crypto-x-api";
 import * as models from '../icc-api/model/models';
 
 import * as _ from 'lodash';
-import moment from 'moment/src/moment';
+import moment from 'moment';
+import {XHR} from "../icc-api/api/XHR";
 
 export class IccHelementXApi extends iccHelementApi {
 
@@ -13,12 +14,12 @@ export class IccHelementXApi extends iccHelementApi {
     // contactApi = IccContactXApi;  // needed in serviceToHealthElement, but not injected in the upstream code
 
 
-	constructor(host, headers, crypto) {
+	constructor(host: string, headers: Array<XHR.Header>, crypto: IccCryptoXApi) {
 		super(host, headers);
 		this.crypto = crypto;
 	}
 
-	newInstance(user, patient, h) {
+	newInstance(user: models.UserDto, patient: models.PatientDto, h: any) {
 		const helement = _.assign({
 			id: this.crypto.randomUuid(),
 			_type: 'org.taktik.icure.entities.HealthElement',
@@ -32,11 +33,11 @@ export class IccHelementXApi extends iccHelementApi {
 			openingDate: parseInt(moment().format('YYYYMMDDHHmmss'))
 		}, h || {});
 
-		return this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId).then(secretForeignKeys => this.crypto.initObjectDelegations(helement, patient, user.healthcarePartyId, secretForeignKeys[0])).then(initData => {
+		return this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(helement, patient, user.healthcarePartyId!, secretForeignKeys[0])).then(initData => {
 			_.extend(helement, { delegations: initData.delegations, cryptedForeignKeys: initData.cryptedForeignKeys, secretForeignKeys: initData.secretForeignKeys });
 
 			let promise = Promise.resolve(helement);
-			(user.autoDelegations ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || []) : []).forEach(delegateId => promise = promise.then(contact => this.crypto.appendObjectDelegations(contact, patient, user.healthcarePartyId, delegateId, initData.secretId)).then(extraData => _.extend(helement, { delegations: extraData.delegations, cryptedForeignKeys: extraData.cryptedForeignKeys })));
+			(user.autoDelegations ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || []) : []).forEach(delegateId => promise = promise.then(contact => this.crypto.appendObjectDelegations(contact, patient, user.healthcarePartyId!, delegateId, initData.secretId)).then(extraData => _.extend(helement, { delegations: extraData.delegations, cryptedForeignKeys: extraData.cryptedForeignKeys })));
 			return promise;
 		});
 	}
@@ -56,13 +57,13 @@ export class IccHelementXApi extends iccHelementApi {
   * @param hcparty
   * @param patient (Promise)
   */
-	findBy(hcpartyId, patient) {
+	findBy(hcpartyId: string, patient: models.PatientDto) {
 		if (!patient.delegations || !patient.delegations[hcpartyId] || !(patient.delegations[hcpartyId].length > 0)) {
 			throw 'There is not delegation for this healthcare party(' + hcpartyId + ') in patient(' + patient.id + ')';
 		}
 
-		return this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, patient.delegations).then(function (decryptedAndImportedAesHcPartyKeys) {
-			var collatedAesKeys = {};
+		return this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, patient.delegations).then(function (decryptedAndImportedAesHcPartyKeys: Array<>) {
+			var collatedAesKeys :{ [key: string]: string; } = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
 
 			return this.crypto.decryptDelegationsSFKs(patient.delegations[hcpartyId], collatedAesKeys, patient.id).then(secretForeignKeys => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then(helements => this.decrypt(hcpartyId, helements)).then(function (decryptedHelements) {
@@ -86,7 +87,7 @@ export class IccHelementXApi extends iccHelementApi {
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
 			return this.crypto.decryptDelegationsSFKs(he.delegations[hcpartyId], collatedAesKeys, he.id).then(sfks => {
 				if (he.encryptedDescr) {
-					return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => new Promise((resolve, reject) => this.crypto.AES.decrypt(key, this.crypto.utils.text2ua(atob(he.encryptedDescr))).then(resolve).catch(err => {
+					return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => new Promise((resolve, reject) => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(he.encryptedDescr))).then(resolve).catch(err => {
 						console.log("Error, could not decrypt: " + err);
 						resolve(null);
 					}))).then(decrypted => {

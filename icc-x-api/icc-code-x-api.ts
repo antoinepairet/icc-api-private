@@ -1,4 +1,4 @@
-import { iccCodeApi } from "../icc-api/iccApi";
+import {iccCodeApi} from "../icc-api/iccApi";
 
 import * as codeLanguages from './rsrc/codelng';
 import * as icd10 from './rsrc/icd10';
@@ -14,11 +14,11 @@ export class IccCodeXApi extends iccCodeApi {
     icpc2: any = icpc2;
     codeLanguages: any = codeLanguages;
 
-	constructor(host: string, headers: Array<XHR.Header>) {
-		super(host, headers);
-	}
+    constructor(host: string, headers: Array<XHR.Header>) {
+        super(host, headers);
+    }
 
-	icdChapters(listOfCodes: Array<string>) {
+    icdChapters(listOfCodes: Array<string>) {
         return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icd10).find(([k, v]) => {
             const parts = k.split(/-/);
             return code.substr(0, 3) >= parts[0] && code.substr(0, 3) <= parts[1];
@@ -27,34 +27,62 @@ export class IccCodeXApi extends iccCodeApi {
                 return {};
             }
             const shortKey = pairOfRangeAndIcdInfo[0].substr(0, 2)
-            ;(acc[shortKey] || (acc[shortKey] = { code: shortKey, descr: pairOfRangeAndIcdInfo[1], subCodes: [] })).subCodes.push(code);
+            ;(acc[shortKey] || (acc[shortKey] = {
+                code: shortKey,
+                descr: pairOfRangeAndIcdInfo[1],
+                subCodes: []
+            })).subCodes.push(code);
             return acc;
         }, {})), (c: any) => c.shortKey));
     }
 
     icpcChapters(listOfCodes: Array<string>) {
-        return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icpc2).find(([k, v]) => k === code.substr(0,1).toUpperCase())])),
+        return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icpc2).find(([k, v]) => k === code.substr(0, 1).toUpperCase())])),
             (acc: any, pairOfRangeAndIcdInfo, code) => {
                 if (!pairOfRangeAndIcdInfo) {
                     return {};
                 }
                 const shortKey = pairOfRangeAndIcdInfo[0]
-                ;(acc[shortKey] || (acc[shortKey] = { code: shortKey, descr: pairOfRangeAndIcdInfo[1], subCodes: [] })).subCodes.push(code);
+                ;(acc[shortKey] || (acc[shortKey] = {
+                    code: shortKey,
+                    descr: pairOfRangeAndIcdInfo[1],
+                    subCodes: []
+                })).subCodes.push(code);
                 return acc;
-        }, {})), (c: any) => c.shortKey));
+            }, {})), (c: any) => c.shortKey));
     }
 
-	languageForType(type: string, lng: string) {
-		const availableLanguages = this.codeLanguages[type];
-		return availableLanguages && availableLanguages.indexOf(lng) >= 0 ? lng : 'fr';
-	}
+    languageForType(type: string, lng: string) {
+        const availableLanguages = this.codeLanguages[type];
+        return availableLanguages && availableLanguages.indexOf(lng) >= 0 ? lng : 'fr';
+    }
 
-	normalize(c:CodeDto|string) {
-		return c instanceof String ? { id: c, type: c.split(/\|/)[0], code: c.split(/\|/)[1], version: c.split(/\|/)[2] } :
+    normalize(c: CodeDto | string) {
+        return c instanceof String ? {
+                id: c,
+                type: c.split(/\|/)[0],
+                code: c.split(/\|/)[1],
+                version: c.split(/\|/)[2]
+            } :
             (c as CodeDto).type && (c as CodeDto).code && !(c as CodeDto).id ?
-                { id: (c as CodeDto).type + '|' + (c as CodeDto).code + '|' + ((c as CodeDto).version || '1'), type: (c as CodeDto).type, code: (c as CodeDto).code, version: (c as CodeDto).version || '1' } :
+                {
+                    id: (c as CodeDto).type + '|' + (c as CodeDto).code + '|' + ((c as CodeDto).version || '1'),
+                    type: (c as CodeDto).type,
+                    code: (c as CodeDto).code,
+                    version: (c as CodeDto).version || '1'
+                } :
                 (c as CodeDto).id && (!(c as CodeDto).code || !(c as CodeDto).type || !(c as CodeDto).version) ?
-                    { id: (c as CodeDto).id, type: (c as CodeDto).id!.split(/\|/)[0], code: (c as CodeDto).id!.split(/\|/)[1], version: (c as CodeDto).id!.split(/\|/)[2] } : { id: (c as CodeDto).id!, type: (c as CodeDto).type, code: (c as CodeDto).code, version: (c as CodeDto).version || '1' };
-	}
+                    {
+                        id: (c as CodeDto).id,
+                        type: (c as CodeDto).id!.split(/\|/)[0],
+                        code: (c as CodeDto).id!.split(/\|/)[1],
+                        version: (c as CodeDto).id!.split(/\|/)[2]
+                    } : {
+                        id: (c as CodeDto).id!,
+                        type: (c as CodeDto).type,
+                        code: (c as CodeDto).code,
+                        version: (c as CodeDto).version || '1'
+                    };
+    }
 
 }

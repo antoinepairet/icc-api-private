@@ -1,19 +1,19 @@
 import * as base64js from 'base64-js';
 
-export const utils: Object = {
+export class UtilsClass {
     /**
 * String to Uint8Array
 *
 * @param s
 * @returns {Uint8Array}
 */
-    text2ua: function (s) {
+    text2ua(s: string): Uint8Array {
         var ua = new Uint8Array(s.length);
         for (var i = 0; i < s.length; i++) {
             ua[i] = s.charCodeAt(i) & 0xff;
         }
         return ua;
-    },
+    }
 
     /**
 * Hex String to Uint8Array
@@ -21,16 +21,16 @@ export const utils: Object = {
 * @param s
 * @returns {Uint8Array}
 */
-    hex2ua: function (s) {
+    hex2ua(s: string): Uint8Array {
         var ua = new Uint8Array(s.length / 2);
         s = s.toLowerCase();
         for (var i = 0; i < s.length; i += 2) {
             ua[i / 2] = (s.charCodeAt(i) < 58 ? s.charCodeAt(i) - 48 : s.charCodeAt(i) - 87) * 16 + (s.charCodeAt(i + 1) < 58 ? s.charCodeAt(i + 1) - 48 : s.charCodeAt(i + 1) - 87);
         }
         return ua;
-    },
+    }
 
-    spkiToJwk: function (buf) {
+    spkiToJwk(buf: Uint8Array): { kty: string, n: string, e: string} {
         var hex = this.ua2hex(buf);
         if (!hex.startsWith('3082') || !hex.substr(8).startsWith('0282010100')) {
             hex = hex.substr(48);
@@ -63,9 +63,9 @@ export const utils: Object = {
             n: this.base64url(this.minimalRep(key.modulus)),
             e: this.base64url(this.minimalRep(key.publicExponent))
         };
-    },
+    }
 
-    pkcs8ToJwk: function (buf) {
+    pkcs8ToJwk(buf: Uint8Array) {
         var hex = this.ua2hex(buf);
         if (!hex.startsWith('3082') || !hex.substr(8).startsWith('0201000282010100')) {
             hex = hex.substr(52);
@@ -110,17 +110,17 @@ export const utils: Object = {
             dq: this.base64url(this.minimalRep(key.exponent2)),
             qi: this.base64url(this.minimalRep(key.coefficient))
         };
-    },
+    }
 
-    minimalRep: function (b) {
+    minimalRep(b:Uint8Array) {
         var i = 0;
         while (b[i] === 0) {
             i++;
         }
         return b.slice(i);
-    },
+    }
 
-    ua2utf8: function (arrBuf) {
+    ua2utf8(arrBuf: Uint8Array): string {
         var out, i, len, c;
         var char2, char3;
 
@@ -159,11 +159,11 @@ export const utils: Object = {
         }
 
         return out;
-    },
+    }
 
-    base64url: function (b) {
+    base64url(b: Uint8Array): string {
         return base64js.fromByteArray(b).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-    },
+    }
 
     /**
 * Uint8Array/ArrayBuffer to hex String
@@ -171,7 +171,7 @@ export const utils: Object = {
 * @param ua {Uint8Array} or ArrayBuffer
 * @returns {String} Hex String
 */
-    ua2hex: function (ua) {
+    ua2hex(ua: Uint8Array|ArrayBuffer): string {
         var s = '';
         ua = ua instanceof Uint8Array ? ua : new Uint8Array(ua);
         for (var i = 0; i < ua.length; i++) {
@@ -181,7 +181,7 @@ export const utils: Object = {
             s += String.fromCharCode(lhb > 9 ? lhb + 87 : lhb + 48);
         }
         return s;
-    },
+    }
 
     /**
 * ArrayBuffer to String - resilient to large ArrayBuffers.
@@ -189,7 +189,7 @@ export const utils: Object = {
 * @param arrBuf
 * @returns {string}
 */
-    ua2text: function (arrBuf) {
+    ua2text(arrBuf: Uint8Array): string {
         var str = '';
         var ab = new Uint8Array(arrBuf);
         var abLen = ab.length;
@@ -201,45 +201,18 @@ export const utils: Object = {
             str += String.fromCharCode.apply(null, subab);
         }
         return str;
-    },
+    }
 
-    hex2text: function (hexStr) {
-        return this.ua2text(this.utils.hex2ua(hexStr));
-    },
+    hex2text(hexStr: string): string {
+        return this.ua2text(this.hex2ua(hexStr));
+    }
 
-    text2hex: function (text) {
-        return this.ua2hex(this.utils.text2ua(text));
-    },
+    text2hex(text: string): string {
+        return this.ua2hex(this.text2ua(text));
+    }
 
-    asciiToArrayBuffer: function (str) {
-        var chars = [];
-        for (var i = 0; i < str.byte; ++i) {
-            chars.push(str.charCodeAt(i));
-        }
-        return new Uint8Array(chars);
-    },
 
-    /**
-* Builds a hex string representation of any array-like input (array or
-* ArrayBufferView). The output looks like this:
-*  [ab 03 4c 99]
-*
-* @param bytes
-* @returns {string}
-*/
-    byteArrayToHexString: function (bytes) {
-        var hexBytes = [];
-        for (var i = 0; i < bytes.length; ++i) {
-            var byteString = bytes[i].toString(16);
-            if (byteString.length < 2) {
-                byteString = '0' + byteString;
-            }
-            hexBytes.push(byteString);
-        }
-        return '[' + hexBytes.join(' ') + ']';
-    },
-
-    base64toByteArray: function (base64Data) {
+    base64toByteArray(base64Data: string): Array<Uint8Array> {
         var sliceSize = 1024;
         var byteCharacters = atob(base64Data);
         var bytesLength = byteCharacters.length;
@@ -257,7 +230,7 @@ export const utils: Object = {
             byteArrays[sliceIndex] = new Uint8Array(bytes);
         }
         return byteArrays;
-    },
+    }
 
     /**
 *
@@ -265,10 +238,12 @@ export const utils: Object = {
 * @param buffer2{ Uint8Array}
 * @returns {ArrayBuffer}
 */
-    appendBuffer: function (buffer1, buffer2) {
+    appendBuffer(buffer1: ArrayBuffer, buffer2: ArrayBuffer): ArrayBuffer {
         var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
         tmp.set(new Uint8Array(buffer1), 0);
         tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
-        return tmp.buffer;
+        return tmp.buffer as ArrayBuffer;
     }
 }
+
+export const utils = new UtilsClass()

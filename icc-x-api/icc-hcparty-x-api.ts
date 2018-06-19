@@ -1,19 +1,17 @@
 import { iccHcpartyApi } from "../icc-api/iccApi";
 
-import * as i18n from './rsrc/contact.i18n';
-
-import * as _ from 'lodash';
+import {XHR} from "../icc-api/api/XHR";
 
 
 export class IccHcpartyXApi extends iccHcpartyApi {
 
-    hcPartyKeysCache: Object = {};
+    hcPartyKeysCache: { [key: string]: string; } = {};
 
-    constructor(host, headers) {
+    constructor(host: string, headers: Array<XHR.Header>) {
         super(host, headers);
     }
 
-    getHcPartyKeysForDelegate(healthcarePartyId) {
+    getHcPartyKeysForDelegate(healthcarePartyId: string) {
         const cached = this.hcPartyKeysCache[healthcarePartyId];
         return cached ? Promise.resolve(cached) : super.getHcPartyKeysForDelegate(healthcarePartyId).then(r => this.hcPartyKeysCache[healthcarePartyId] = r);
     }

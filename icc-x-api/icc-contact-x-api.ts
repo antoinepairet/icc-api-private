@@ -3,21 +3,22 @@ import { IccCryptoXApi } from "../icc-x-api/icc-crypto-x-api";
 
 import * as i18n from "./rsrc/contact.i18n";
 
-import moment from 'moment/src/moment';
+import moment from 'moment';
 import * as _ from 'lodash';
-import {PatientDto} from "../icc-api/model/PatientDto";
+import * as models from "../icc-api/model/models";
+import {XHR} from "../icc-api/api/XHR";
 
 export class IccContactXApi extends iccContactApi {
 
 	i18n: any = i18n;
 	crypto: IccCryptoXApi;
 
-	constructor(host, headers, crypto) {
+	constructor(host: string, headers: Array<XHR.Header>, crypto: IccCryptoXApi) {
 		super(host, headers);
 		this.crypto = crypto;
 	}
 
-	newInstance(user, patient, c) {
+	newInstance(user: models.UserDto, patient: models.PatientDto, c: any) {
 		const contact = _.extend({
 			id: this.crypto.randomUuid(),
 			_type: 'org.taktik.icure.entities.Contact',
@@ -33,11 +34,11 @@ export class IccContactXApi extends iccContactApi {
 			openingDate: parseInt(moment().format('YYYYMMDDHHmmss'))
 		}, c || {});
 
-		return this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId).then(secretForeignKeys => this.crypto.initObjectDelegations(contact, patient, user.healthcarePartyId, secretForeignKeys[0])).then(initData => {
+		return this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(contact, patient, user.healthcarePartyId!, secretForeignKeys[0])).then(initData => {
 			_.extend(contact, { delegations: initData.delegations, cryptedForeignKeys: initData.cryptedForeignKeys, secretForeignKeys: initData.secretForeignKeys });
 
 			let promise = Promise.resolve(contact);
-			(user.autoDelegations ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || []) : []).forEach(delegateId => promise = promise.then(contact => this.crypto.appendObjectDelegations(contact, patient, user.healthcarePartyId, delegateId, initData.secretId)).then(extraData => _.extend(contact, { delegations: extraData.delegations, cryptedForeignKeys: extraData.cryptedForeignKeys })));
+			(user.autoDelegations ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || []) : []).forEach(delegateId => promise = promise.then(contact => this.crypto.appendObjectDelegations(contact, patient, user.healthcarePartyId!, delegateId, initData.secretId)).then(extraData => _.extend(contact, { delegations: extraData.delegations, cryptedForeignKeys: extraData.cryptedForeignKeys })));
 			return promise;
 		});
 	}
@@ -54,10 +55,10 @@ export class IccContactXApi extends iccContactApi {
   *
   * After these painful steps, you have the contacts of the patient.
   *
-  * @param hcparty
+  * @param hcpartyId
   * @param patient (Promise)
   */
-	findBy(hcpartyId, patient: PatientDto) {
+	findBy(hcpartyId: string, patient: models.PatientDto) {
 		return this.crypto.extractDelegationsSFKs(patient, hcpartyId)
 			.then(secretForeignKeys => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(',')))
 			.then(contacts => this.decrypt(hcpartyId, contacts))
@@ -66,16 +67,16 @@ export class IccContactXApi extends iccContactApi {
 			});
 	}
 
-	decrypt(hcpartyId, ctcs) {
-		return Promise.all(ctcs.map(ctc => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, ctc.delegations).then(function (decryptedAndImportedAesHcPartyKeys) {
+	decrypt(hcpartyId: string, ctcs: Array<models.ContactDto>) {
+		return Promise.all(ctcs.map(ctc => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, ctc.delegations!).then(function (decryptedAndImportedAesHcPartyKeys: Array<ArrayBuffer>) {
 			var collatedAesKeys = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
-			return this.crypto.decryptDelegationsSFKs(ctc.delegations[hcpartyId], collatedAesKeys, ctc.id).then(sfks => {
-				return Promise.all(ctc.services.map(svc => {
+			return this.crypto.decryptDelegationsSFKs(ctc.delegations![hcpartyId], collatedAesKeys, ctc.id).then(sfks => {
+				return Promise.all(ctc.services!.map(svc => {
 					if (svc.encryptedContent || svc.encryptedSelf) {
-						return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => svc.encryptedContent ? new Promise((resolve, reject) => this.crypto.AES.decrypt(key, this.crypto.utils.text2ua(atob(svc.encryptedContent))).then(c => resolve({ content: JSON.parse(this.crypto.utils.ua2utf8(c)) })).catch(err => {
+						return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => svc.encryptedContent ? new Promise((resolve, reject) => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(svc.encryptedContent))).then(c => resolve({ content: JSON.parse(this.crypto.utils.ua2utf8(c)) })).catch(err => {
 							console.log("Error, could not decrypt: " + err);resolve(null);
-						})) : svc.encryptedSelf ? new Promise((resolve, reject) => this.crypto.AES.decrypt(key, this.crypto.utils.text2ua(atob(svc.encryptedSelf))).then(s => resolve(JSON.parse(this.crypto.utils.ua2utf8(s)))).catch(err => {
+						})) : svc.encryptedSelf ? new Promise((resolve, reject) => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(svc.encryptedSelf))).then(s => resolve(JSON.parse(this.crypto.utils.ua2utf8(s)))).catch(err => {
 							console.log("Error, could not decrypt: " + err);resolve(null);
 						})) : null).then(decrypted => {
 							decrypted && _.assign(svc, decrypted);
@@ -87,7 +88,7 @@ export class IccContactXApi extends iccContactApi {
 				})).then(svcs => {
 					ctc.services = svcs;
 					//console.log('ES:'+ctc.encryptedSelf)
-					return ctc.encryptedSelf ? this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => this.crypto.AES.decrypt(key, this.crypto.utils.text2ua(atob(ctc.encryptedSelf))).then(dec => {
+					return ctc.encryptedSelf ? this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(ctc.encryptedSelf))).then(dec => {
 						dec && _.assign(ctc, JSON.parse(this.crypto.utils.ua2utf8(dec)));
 						return ctc;
 					})) : ctc;

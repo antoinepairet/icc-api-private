@@ -2,6 +2,8 @@ import { iccDocumentApi } from "../icc-api/iccApi";
 import { IccCryptoXApi } from "./icc-crypto-x-api";
 
 import * as _ from 'lodash';
+import {XHR} from "../icc-api/api/XHR";
+import * as models from "../icc-api/model/models";
 
 export class IccDocumentXApi extends iccDocumentApi {
 
@@ -440,12 +442,12 @@ export class IccDocumentXApi extends iccDocumentApi {
         'x-music/x-midi': 'public.midi'
     };
 
-	constructor(host, headers, crypto) {
+	constructor(host: string, headers: Array<XHR.Header>, crypto: IccCryptoXApi) {
         super(host, headers);
         this.crypto = crypto;
 	}
 
-	newInstance(user, patient, c) {
+	newInstance(user: models.UserDto, patient: models.PatientDto, c) {
 		const document = _.extend({
 			id: this.crypto.randomUuid(),
 			_type: 'org.taktik.icure.entities.Document',
@@ -457,16 +459,16 @@ export class IccDocumentXApi extends iccDocumentApi {
 			tags: []
 		}, c || {});
 
-		return patient ? this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId).then(secretForeignKeys => this.crypto.initObjectDelegations(document, patient, user.healthcarePartyId, secretForeignKeys[0])).then(initData => {
+		return patient ? this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(document, patient, user.healthcarePartyId!, secretForeignKeys[0])).then(initData => {
 			_.extend(document, { delegations: initData.delegations, cryptedForeignKeys: initData.cryptedForeignKeys, secretForeignKeys: initData.secretForeignKeys });
 
 			let promise = Promise.resolve(document);
 			(user.autoDelegations ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || []) : []).forEach(delegateId => promise = promise.then(document => this.crypto.appendObjectDelegations(document, patient, user.healthcarePartyId, delegateId, initData.secretId)).then(extraData => _.extend(document, { delegations: extraData.delegations, cryptedForeignKeys: extraData.cryptedForeignKeys })));
 			return promise;
-		}) : this.crypto.initObjectDelegations(document, null, user.healthcarePartyId, null).then(initData => _.extend(document, { delegations: initData.delegations }));
+		}) : this.crypto.initObjectDelegations(document, null, user.healthcarePartyId!, null).then(initData => _.extend(document, { delegations: initData.delegations }));
 	}
 
-    findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys) {
+    findByHCPartyPatientSecretFKeys(hcpartyId: string, secretForeignKeys: string) {
         return new Promise(function (resolve, reject) {
             reject(console.log('findByHCPartyPatientSecretFKeys not implemented in document API!'));
         });
@@ -506,7 +508,7 @@ export class IccDocumentXApi extends iccDocumentApi {
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
 			return this.crypto.decryptDelegationsSFKs(document.delegations[hcpartyId], collatedAesKeys, document.id).then(sfks => {
 				if (document.encryptedContent) {
-					return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => new Promise((resolve, reject) => this.crypto.AES.decrypt(key, this.crypto.utils.text2ua(atob(document.encryptedContent))).then(resolve).catch(err => {
+					return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => new Promise((resolve, reject) => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(document.encryptedContent))).then(resolve).catch(err => {
 						console.log("Error, could not decrypt: " + err);
 						resolve(null);
 					}))).then(decrypted => {
