@@ -5,6 +5,8 @@ import * as icd10 from './rsrc/icd10';
 import * as icpc2 from './rsrc/icpc2';
 
 import * as _ from "lodash";
+import {XHR} from "../icc-api/api/XHR";
+import {CodeDto} from "../icc-api/model/CodeDto";
 
 export class IccCodeXApi extends iccCodeApi {
 
@@ -12,15 +14,15 @@ export class IccCodeXApi extends iccCodeApi {
     icpc2: any = icpc2;
     codeLanguages: any = codeLanguages;
 
-	constructor(host, headers) {
+	constructor(host: string, headers: Array<XHR.Header>) {
 		super(host, headers);
 	}
 
-	icdChapters(listOfCodes) {
+	icdChapters(listOfCodes: Array<string>) {
         return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icd10).find(([k, v]) => {
             const parts = k.split(/-/);
             return code.substr(0, 3) >= parts[0] && code.substr(0, 3) <= parts[1];
-        })])), (acc, pairOfRangeAndIcdInfo, code) => {
+        })])), (acc: any, pairOfRangeAndIcdInfo, code) => {
             if (!pairOfRangeAndIcdInfo) {
                 return {};
             }
@@ -30,9 +32,9 @@ export class IccCodeXApi extends iccCodeApi {
         }, {})), (c: any) => c.shortKey));
     }
 
-    icpcChapters(listOfCodes) {
+    icpcChapters(listOfCodes: Array<string>) {
         return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icpc2).find(([k, v]) => k === code.substr(0,1).toUpperCase())])),
-            (acc, pairOfRangeAndIcdInfo, code) => {
+            (acc: any, pairOfRangeAndIcdInfo, code) => {
                 if (!pairOfRangeAndIcdInfo) {
                     return {};
                 }
@@ -42,13 +44,17 @@ export class IccCodeXApi extends iccCodeApi {
         }, {})), (c: any) => c.shortKey));
     }
 
-	languageForType(type, lng) {
+	languageForType(type: string, lng: string) {
 		const availableLanguages = this.codeLanguages[type];
 		return availableLanguages && availableLanguages.indexOf(lng) >= 0 ? lng : 'fr';
 	}
 
-	normalize(c) {
-		return c instanceof String ? { id: c, type: c.split(/\|/)[0], code: c.split(/\|/)[1], version: c.split(/\|/)[2] } : c.type && c.code && !c.id ? { id: c.type + '|' + c.code + '|' + (c.version || '1'), type: c.type, code: c.code, version: c.version || '1' } : c.id && (!c.code || !c.type || !c.version) ? { id: c.id, type: c.id.split(/\|/)[0], code: c.id.split(/\|/)[1], version: c.id.split(/\|/)[2] } : { id: c.id, type: c.type, code: c.code, version: c.version || '1' };
+	normalize(c:CodeDto|string) {
+		return c instanceof String ? { id: c, type: c.split(/\|/)[0], code: c.split(/\|/)[1], version: c.split(/\|/)[2] } :
+            (c as CodeDto).type && (c as CodeDto).code && !(c as CodeDto).id ?
+                { id: (c as CodeDto).type + '|' + (c as CodeDto).code + '|' + ((c as CodeDto).version || '1'), type: (c as CodeDto).type, code: (c as CodeDto).code, version: (c as CodeDto).version || '1' } :
+                (c as CodeDto).id && (!(c as CodeDto).code || !(c as CodeDto).type || !(c as CodeDto).version) ?
+                    { id: (c as CodeDto).id, type: (c as CodeDto).id!.split(/\|/)[0], code: (c as CodeDto).id!.split(/\|/)[1], version: (c as CodeDto).id!.split(/\|/)[2] } : { id: (c as CodeDto).id!, type: (c as CodeDto).type, code: (c as CodeDto).code, version: (c as CodeDto).version || '1' };
 	}
 
 }

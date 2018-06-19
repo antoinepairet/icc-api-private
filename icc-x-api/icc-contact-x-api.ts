@@ -5,6 +5,7 @@ import * as i18n from "./rsrc/contact.i18n";
 
 import moment from 'moment/src/moment';
 import * as _ from 'lodash';
+import {PatientDto} from "../icc-api/model/PatientDto";
 
 export class IccContactXApi extends iccContactApi {
 
@@ -56,7 +57,7 @@ export class IccContactXApi extends iccContactApi {
   * @param hcparty
   * @param patient (Promise)
   */
-	findBy(hcpartyId, patient) {
+	findBy(hcpartyId, patient: PatientDto) {
 		return this.crypto.extractDelegationsSFKs(patient, hcpartyId)
 			.then(secretForeignKeys => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(',')))
 			.then(contacts => this.decrypt(hcpartyId, contacts))
