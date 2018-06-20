@@ -506,7 +506,7 @@ export class IccDocumentXApi extends iccDocumentApi {
     }
 
 
-	decrypt(hcpartyId:string, documents:Array<models.DocumentDto>) {
+	decrypt(hcpartyId:string, documents:Array<models.DocumentDto>): Promise<Array<models.DocumentDto>|void> {
 		return Promise.all(documents.map(document => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, document.delegations!).then((decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) =>{
 			var collatedAesKeys:{[key: string]: CryptoKey;} = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
