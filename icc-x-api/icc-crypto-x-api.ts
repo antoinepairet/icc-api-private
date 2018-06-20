@@ -25,7 +25,8 @@ export class IccCryptoXApi {
 	}
 
 	randomUuid() {
-		return (1e7.toString() + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (Number(c) ^ window.crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> Number(c) / 4).toString(16));
+		let temp: any = window.crypto.getRandomValues(new Uint8Array(1))!;
+		return (1e7.toString() + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c => (Number(c) ^ temp[0] & 15 >> Number(c) / 4).toString(16));
 	}
 
 	decryptHcPartyKey(delegatorId: string, delegateHcPartyId: string, encryptedHcPartyKey: string, encryptedForDelegator: boolean = false): PromiseLike<{ delegatorId: string, key: CryptoKey }> {
@@ -68,7 +69,7 @@ export class IccCryptoXApi {
 		return this.decryptAndImportAesHcPartyKeysForDelegators(Object.keys(delegatorIds), healthcarePartyId);
 	}
 
-	initObjectDelegations(createdObject:any, parentObject:any, ownerId: string, secretForeignKeyOfParent: string) : Promise<{delegations: any, cryptedForeignKeys: any, secretForeignKeys: any[] , secretId: string}> {
+	initObjectDelegations(createdObject:any, parentObject:any, ownerId: string, secretForeignKeyOfParent: string|null) : Promise<{delegations: any, cryptedForeignKeys: any, secretForeignKeys: any[] , secretId: string}> {
 		const secretId = this.randomUuid();
 		return this.hcpartyBaseApi.getHealthcareParty(ownerId).then(owner => owner.hcPartyKeys[ownerId][0]).then(encryptedHcPartyKey => this.decryptHcPartyKey(ownerId, ownerId, encryptedHcPartyKey, true)).then(importedAESHcPartyKey => Promise.all([this.AES.encrypt(importedAESHcPartyKey.key, utils.text2ua(createdObject.id + ":" + secretId)), parentObject ? this.AES.encrypt(importedAESHcPartyKey.key, utils.text2ua(createdObject.id + ":" + parentObject.id)) : Promise.resolve(null)])).then(encryptedDelegationAndSecretForeignKey => ({
 			delegations: _.fromPairs([[ownerId, [{ owner: ownerId, delegatedTo: ownerId, key: this.utils.ua2hex(encryptedDelegationAndSecretForeignKey[0]) }]]]),

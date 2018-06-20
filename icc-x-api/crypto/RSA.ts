@@ -89,7 +89,7 @@ export class RSAUtils {
      * @param keyUsages Array of usages. For example, ['encrypt'] for public key.
      * @returns {*}
      */
-    importKey(format: string, keydata: JsonWebKey | BufferSource, keyUsages: Array<string>): PromiseLike<CryptoKey> {
+    importKey(format: string, keydata: JsonWebKey | ArrayBuffer, keyUsages: Array<string>): PromiseLike<CryptoKey> {
         var extractable = true;
         return window.crypto.subtle.importKey(format, keydata, this.rsaHashedParams, extractable, keyUsages);
     }
@@ -100,7 +100,7 @@ export class RSAUtils {
      * @param keydata should be the key data based on the format.
      * @returns {*}
      */
-    importPrivateKey(format: string, keydata: JsonWebKey | BufferSource) {
+    importPrivateKey(format: string, keydata: JsonWebKey | ArrayBuffer) {
         var extractable = true;
         return window.crypto.subtle.importKey(format, keydata, this.rsaHashedParams, extractable, ['decrypt']);
     }
@@ -113,7 +113,7 @@ export class RSAUtils {
      * @param publicKeyData should be the key data based on the format.
      * @returns {Promise|*}
      */
-    importKeyPair(privateKeyFormat: string, privateKeydata: JsonWebKey | BufferSource, publicKeyFormat: string, publicKeyData: JsonWebKey | BufferSource): Promise<{ publicKey: CryptoKey, privateKey: CryptoKey }> {
+    importKeyPair(privateKeyFormat: string, privateKeydata: JsonWebKey | ArrayBuffer, publicKeyFormat: string, publicKeyData: JsonWebKey | ArrayBuffer): Promise<{ publicKey: CryptoKey, privateKey: CryptoKey }> {
         var extractable = true;
         var privPromise = window.crypto.subtle.importKey(privateKeyFormat, privateKeydata, this.rsaHashedParams, extractable, ['decrypt']);
         var pubPromise = window.crypto.subtle.importKey(publicKeyFormat, publicKeyData, this.rsaHashedParams, extractable, ['encrypt']);

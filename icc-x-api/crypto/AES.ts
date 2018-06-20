@@ -12,7 +12,7 @@ export class AESUtils {
     }
     aesLocalStoreIdPrefix = 'org.taktik.icure.aes.'
 
-    encrypt(cryptoKey: CryptoKey, plainData: BufferSource) {
+    encrypt(cryptoKey: CryptoKey, plainData: ArrayBuffer) {
         return new Promise((resolve: (value: ArrayBuffer) => any, reject: (reason: any) => any) => {
             var aesAlgorithmEncrypt = {
                 name: this.aesAlgorithmEncrypt.name,
@@ -28,11 +28,11 @@ export class AESUtils {
      * @param encryptedData (ArrayBuffer)
      * @returns {Promise} will be ArrayBuffer
      */
-    decrypt(cryptoKey: CryptoKey, encryptedData: ArrayBuffer): PromiseLike<ArrayBuffer|null> {
+    decrypt(cryptoKey: CryptoKey, encryptedData: ArrayBuffer|Uint8Array): PromiseLike<ArrayBuffer|null> {
         if (!cryptoKey) {
             return Promise.resolve(null);
         }
-        var encryptedDataUnit8 = new Uint8Array(encryptedData);
+        if(encryptedData instanceof ArrayBuffer) { var encryptedDataUnit8 = new Uint8Array(encryptedData)}else{var encryptedDataUnit8 = encryptedData};
         var aesAlgorithmEncrypt = { name: this.aesAlgorithmEncrypt.name, iv: encryptedDataUnit8.subarray(0, this.ivLength)
 
             /*
@@ -111,11 +111,11 @@ export class AESUtils {
      * @param aesKey
      * @returns {*}
      */
-    importKey(format: string, aesKey: JsonWebKey|BufferSource) {
+    importKey(format: string, aesKey: JsonWebKey|ArrayBuffer|Uint8Array): PromiseLike<CryptoKey> {
         //TODO test
         var extractable = true;
         var keyUsages = ['decrypt', 'encrypt'];
-        return window.crypto.subtle.importKey(format, aesKey, this.aesKeyGenParams, extractable, keyUsages);
+        return window.crypto.subtle.importKey(format, aesKey, this.aesKeyGenParams.name, extractable, keyUsages);
     }
 
 }

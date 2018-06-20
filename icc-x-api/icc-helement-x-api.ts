@@ -7,6 +7,9 @@ import * as models from '../icc-api/model/models';
 import * as _ from 'lodash';
 import moment from 'moment';
 import {XHR} from "../icc-api/api/XHR";
+import { utils } from './crypto/utils';
+import { AES } from './crypto/AES';
+import { RSA } from './crypto/RSA';
 
 export class IccHelementXApi extends iccHelementApi {
 
@@ -33,7 +36,7 @@ export class IccHelementXApi extends iccHelementApi {
 			openingDate: parseInt(moment().format('YYYYMMDDHHmmss'))
 		}, h || {});
 
-		return this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(helement, patient, user.healthcarePartyId!, secretForeignKeys[0])).then(initData => {
+		return this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(helement, patient, user.healthcarePartyId!, secretForeignKeys[0].delegatorId)).then(initData => {
 			_.extend(helement, { delegations: initData.delegations, cryptedForeignKeys: initData.cryptedForeignKeys, secretForeignKeys: initData.secretForeignKeys });
 
 			let promise = Promise.resolve(helement);
@@ -62,12 +65,12 @@ export class IccHelementXApi extends iccHelementApi {
 			throw 'There is not delegation for this healthcare party(' + hcpartyId + ') in patient(' + patient.id + ')';
 		}
 
-		return this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, patient.delegations).then(function (decryptedAndImportedAesHcPartyKeys: Array<>) {
-			var collatedAesKeys :{ [key: string]: string; } = {};
+		return this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, patient.delegations).then(function (decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) {
+			var collatedAesKeys :{ [key: string]: CryptoKey; } = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
 
-			return this.crypto.decryptDelegationsSFKs(patient.delegations[hcpartyId], collatedAesKeys, patient.id).then(secretForeignKeys => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then(helements => this.decrypt(hcpartyId, helements)).then(function (decryptedHelements) {
-				const byIds = {};
+			return this.crypto.decryptDelegationsSFKs(patient.delegations![hcpartyId], collatedAesKeys, patient.id).then((secretForeignKeys: Array<{ delegatorId: string, key: CryptoKey }>) => this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(','))).then((helements: Array<models.HealthElementDto>) => this.decrypt(hcpartyId, helements)).then(function (decryptedHelements: Array<Array<{ delegatorId: string, key: CryptoKey }>>) {
+				const byIds: {[key : string]: { delegatorId: string, key: CryptoKey };} = {};
 				decryptedHelements.forEach(he => {
 					if (he.healthElementId) {
 						const phe = byIds[he.healthElementId];
@@ -81,15 +84,15 @@ export class IccHelementXApi extends iccHelementApi {
 		}.bind(this));
 	}
 
-	decrypt(hcpartyId, hes) {
-		return Promise.all(hes.map(he => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, he.delegations).then(function (decryptedAndImportedAesHcPartyKeys) {
-			var collatedAesKeys = {};
+	decrypt(hcpartyId: string, hes: Array<models.HealthElementDto>) : Promise<Array<Array<{ delegatorId: string, key: CryptoKey }>>>{
+		return Promise.all(hes.map(he => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, he.delegations!).then(function (decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) {
+			var collatedAesKeys: {[key: string]: CryptoKey;} = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
-			return this.crypto.decryptDelegationsSFKs(he.delegations[hcpartyId], collatedAesKeys, he.id).then(sfks => {
+			return this.crypto.decryptDelegationsSFKs(he.delegations![hcpartyId], collatedAesKeys, he.id).then((sfks: Array<{ delegatorId: string, key: CryptoKey }>) => {
 				if (he.encryptedDescr) {
-					return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => new Promise((resolve, reject) => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(he.encryptedDescr))).then(resolve).catch(err => {
+					return AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ''))).then(key => new Promise((resolve, reject) => AES.decrypt(key, utils.text2ua(atob(he.encryptedDescr))).then(resolve).catch((err: Error) => {
 						console.log("Error, could not decrypt: " + err);
-						resolve(null);
+						resolve();
 					}))).then(decrypted => {
 						if (decrypted) {
 							he.descr = decrypted;
@@ -103,7 +106,7 @@ export class IccHelementXApi extends iccHelementApi {
 		}.bind(this))));
 	}
 	
-	serviceToHealthElement(user, patient, heSvc, descr) {
+	serviceToHealthElement(user: models.UserDto, patient: models.PatientDto, heSvc: models.ServiceDto, descr: string) {
 		return this.newInstance(user, patient, {
 			idService: heSvc.id,
 			author: heSvc.author,
@@ -118,7 +121,7 @@ export class IccHelementXApi extends iccHelementApi {
 		});
 	}
 
-	stringToCode(code) {
+	stringToCode(code: string) {
 		const c = code.split('|');
 		return new models.CodeDto({ type: c[0], code: c[1], version: c[2], id: code });
 	}

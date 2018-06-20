@@ -5,11 +5,15 @@ import * as _ from 'lodash';
 import {XHR} from "../icc-api/api/XHR";
 import * as models from "../icc-api/model/models";
 
+import { utils } from './crypto/utils';
+import { AES } from './crypto/AES';
+import { RSA } from './crypto/RSA';
+
 export class IccDocumentXApi extends iccDocumentApi {
 
     crypto: IccCryptoXApi;
 
-    utiRevDefs: Object = {
+    utiRevDefs: {[key: string]: string;} = {
         "com.adobe.encapsulatedPostscript": "image/eps",
         "com.adobe.illustrator.aiImage": "application/illustrator",
         "com.adobe.indesignImage": "image/indesign",
@@ -147,7 +151,7 @@ export class IccDocumentXApi extends iccDocumentApi {
         "unofficial.rssFeed": "application/rss+xml"
     };
 
-    utiDefs: Object = {
+    utiDefs: {[key: string]: string;} = {
         'application/atom+xml': 'unofficial.atomFeed',
         'application/bat': 'com.microsoft.windowsExecutable',
         'application/binhex': 'com.apple.binhexArchive',
@@ -447,7 +451,7 @@ export class IccDocumentXApi extends iccDocumentApi {
         this.crypto = crypto;
 	}
 
-	newInstance(user: models.UserDto, patient: models.PatientDto, c) {
+	newInstance(user: models.UserDto, patient: models.PatientDto, c: any) {
 		const document = _.extend({
 			id: this.crypto.randomUuid(),
 			_type: 'org.taktik.icure.entities.Document',
@@ -459,11 +463,11 @@ export class IccDocumentXApi extends iccDocumentApi {
 			tags: []
 		}, c || {});
 
-		return patient ? this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(document, patient, user.healthcarePartyId!, secretForeignKeys[0])).then(initData => {
+		return patient ? this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(document, patient, user.healthcarePartyId!, secretForeignKeys[0].delegatorId)).then(initData => {
 			_.extend(document, { delegations: initData.delegations, cryptedForeignKeys: initData.cryptedForeignKeys, secretForeignKeys: initData.secretForeignKeys });
 
 			let promise = Promise.resolve(document);
-			(user.autoDelegations ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || []) : []).forEach(delegateId => promise = promise.then(document => this.crypto.appendObjectDelegations(document, patient, user.healthcarePartyId, delegateId, initData.secretId)).then(extraData => _.extend(document, { delegations: extraData.delegations, cryptedForeignKeys: extraData.cryptedForeignKeys })));
+			(user.autoDelegations ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || []) : []).forEach(delegateId => promise = promise.then(document => this.crypto.appendObjectDelegations(document, patient, user.healthcarePartyId!, delegateId, initData.secretId)).then(extraData => _.extend(document, { delegations: extraData.delegations, cryptedForeignKeys: extraData.cryptedForeignKeys })));
 			return promise;
 		}) : this.crypto.initObjectDelegations(document, null, user.healthcarePartyId!, null).then(initData => _.extend(document, { delegations: initData.delegations }));
 	}
@@ -503,40 +507,40 @@ export class IccDocumentXApi extends iccDocumentApi {
 
 
 	decrypt(hcpartyId:string, documents:Array<models.DocumentDto>) {
-		return Promise.all(documents.map(document => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, document.delegations!).then((decryptedAndImportedAesHcPartyKeys:{ delegatorId: string, key: CryptoKey }) {
-			var collatedAesKeys:any = {};
+		return Promise.all(documents.map(document => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, document.delegations!).then((decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) =>{
+			var collatedAesKeys:{[key: string]: CryptoKey;} = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
-			return this.crypto.decryptDelegationsSFKs(document.delegations[hcpartyId], collatedAesKeys, document.id).then(sfks => {
-				if (document.encryptedContent) {
-					return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => new Promise((resolve, reject) => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(document.encryptedContent))).then(resolve).catch(err => {
+			return this.crypto.decryptDelegationsSFKs(document.delegations![hcpartyId], collatedAesKeys, document.id!).then((sfks: Array<{ delegatorId: string, key: CryptoKey }>) => {
+				if (sfks.length) {
+					return this.crypto.AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ''))).then((key: CryptoKey) => new Promise((resolve, reject) => AES.decrypt(key, utils.text2ua(atob(document.encryptedContent))).catch((err: Error)=> {
 						console.log("Error, could not decrypt: " + err);
-						resolve(null);
-					}))).then(decrypted => {
+						resolve();
+					}))).then((decrypted: ArrayBuffer) => {
 						if (decrypted) {
-							document = _.extend(document, JSON.parse(this.crypto.utils.ua2text(decrypted)));
+							document = _.extend(document, JSON.parse(utils.ua2text(decrypted)));
 						}
 						return document;
 					});
 				} else {
 					return Promise.resolve(document);
 				}
-			}).catch(function (e) {
+			}).catch(function (e: Error) {
 				console.log(e);
 			});
-		}.bind(this)))).catch(function (e) {
+		}.bind(this)))).catch(function (e: Error) {
 			console.log(e);
 		});
 	}
 
-	getAttachmentUrl(documentId, attachmentId, sfks) {
+	getAttachmentUrl(documentId: string, attachmentId:string, sfks:Array<{ delegatorId: string, key: CryptoKey }>) {
         return this.host + "/document/{documentId}/attachment/{attachmentId}".replace("{documentId}", documentId).replace("{attachmentId}", attachmentId) + (sfks && sfks.length ? '?sfks=' + sfks.join(',') : ''); 
 	}
 
-	uti(mimeType) {
+	uti(mimeType: string) {
 		return this.utiDefs[mimeType];
 	}
 
-	mimeType(uti) {
+	mimeType(uti: string) {
 		return this.utiRevDefs[uti];
 	}
 

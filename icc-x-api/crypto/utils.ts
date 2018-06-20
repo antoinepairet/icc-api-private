@@ -120,7 +120,7 @@ export class UtilsClass {
         return b.slice(i);
     }
 
-    ua2utf8(arrBuf: Uint8Array): string {
+    ua2utf8(arrBuf: Uint8Array|ArrayBuffer): string {
         var out, i, len, c;
         var char2, char3;
 
@@ -189,7 +189,7 @@ export class UtilsClass {
 * @param arrBuf
 * @returns {string}
 */
-    ua2text(arrBuf: Uint8Array): string {
+    ua2text(arrBuf: Uint8Array|ArrayBuffer): string {
         var str = '';
         var ab = new Uint8Array(arrBuf);
         var abLen = ab.length;

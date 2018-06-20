@@ -2,6 +2,9 @@ import { iccContactApi } from "../icc-api/iccApi";
 import { IccCryptoXApi } from "../icc-x-api/icc-crypto-x-api";
 
 import * as i18n from "./rsrc/contact.i18n";
+import { utils } from './crypto/utils';
+import { AES } from './crypto/AES';
+import { RSA } from './crypto/RSA';
 
 import moment from 'moment';
 import * as _ from 'lodash';
@@ -34,7 +37,7 @@ export class IccContactXApi extends iccContactApi {
 			openingDate: parseInt(moment().format('YYYYMMDDHHmmss'))
 		}, c || {});
 
-		return this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(contact, patient, user.healthcarePartyId!, secretForeignKeys[0])).then(initData => {
+		return this.crypto.extractDelegationsSFKs(patient, user.healthcarePartyId!).then(secretForeignKeys => this.crypto.initObjectDelegations(contact, patient, user.healthcarePartyId!, secretForeignKeys[0].delegatorId)).then(initData => {
 			_.extend(contact, { delegations: initData.delegations, cryptedForeignKeys: initData.cryptedForeignKeys, secretForeignKeys: initData.secretForeignKeys });
 
 			let promise = Promise.resolve(contact);
@@ -68,16 +71,16 @@ export class IccContactXApi extends iccContactApi {
 	}
 
 	decrypt(hcpartyId: string, ctcs: Array<models.ContactDto>) {
-		return Promise.all(ctcs.map(ctc => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, ctc.delegations!).then(function (decryptedAndImportedAesHcPartyKeys: Array<ArrayBuffer>) {
-			var collatedAesKeys = {};
+		return Promise.all(ctcs.map(ctc => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, ctc.delegations!).then(function (decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) {
+			var collatedAesKeys: {[key: string]: CryptoKey;} = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
-			return this.crypto.decryptDelegationsSFKs(ctc.delegations![hcpartyId], collatedAesKeys, ctc.id).then(sfks => {
+			return this.crypto.decryptDelegationsSFKs(ctc.delegations![hcpartyId], collatedAesKeys, ctc.id).then((sfks: Array<{ delegatorId: string, key: CryptoKey }>) => {
 				return Promise.all(ctc.services!.map(svc => {
 					if (svc.encryptedContent || svc.encryptedSelf) {
-						return this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => svc.encryptedContent ? new Promise((resolve, reject) => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(svc.encryptedContent))).then(c => resolve({ content: JSON.parse(this.crypto.utils.ua2utf8(c)) })).catch(err => {
-							console.log("Error, could not decrypt: " + err);resolve(null);
-						})) : svc.encryptedSelf ? new Promise((resolve, reject) => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(svc.encryptedSelf))).then(s => resolve(JSON.parse(this.crypto.utils.ua2utf8(s)))).catch(err => {
-							console.log("Error, could not decrypt: " + err);resolve(null);
+						return AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ''))).then((key: CryptoKey) => svc.encryptedContent ? new Promise((resolve, reject) => AES.decrypt(key, utils.text2ua(atob(svc.encryptedContent!))).then(c => resolve({ content: JSON.parse(utils.ua2utf8(c!)) })).catch((err: Error) => {
+							console.log("Error, could not decrypt: " + err);resolve();
+						})) : svc.encryptedSelf ? new Promise((resolve, reject) => AES.decrypt(key, utils.text2ua(atob(svc.encryptedSelf!))).then((s: ArrayBuffer|null) => resolve(JSON.parse(utils.ua2utf8(s!)))).catch((err: Error) => {
+							console.log("Error, could not decrypt: " + err);resolve();
 						})) : null).then(decrypted => {
 							decrypted && _.assign(svc, decrypted);
 							return svc;
@@ -88,8 +91,8 @@ export class IccContactXApi extends iccContactApi {
 				})).then(svcs => {
 					ctc.services = svcs;
 					//console.log('ES:'+ctc.encryptedSelf)
-					return ctc.encryptedSelf ? this.crypto.AES.importKey('raw', this.crypto.utils.hex2ua(sfks[0].replace(/-/g, ''))).then(key => this.crypto.AES.decrypt(key, UtilsClass.text2ua(atob(ctc.encryptedSelf))).then(dec => {
-						dec && _.assign(ctc, JSON.parse(this.crypto.utils.ua2utf8(dec)));
+					return ctc.encryptedSelf ? AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ''))).then(key => AES.decrypt(key, utils.text2ua(atob(ctc.encryptedSelf!))).then(dec => {
+						dec && _.assign(ctc, JSON.parse(utils.ua2utf8(dec)));
 						return ctc;
 					})) : ctc;
 				}).catch(function (e) {
@@ -101,11 +104,11 @@ export class IccContactXApi extends iccContactApi {
 		});
 	}
 
-	contactOfService(ctcs, svcId) {
-		let latestContact = null;
-		let latestService = null;
+	contactOfService(ctcs: Array<models.ContactDto>, svcId:string): models.ContactDto|undefined {
+		let latestContact: models.ContactDto|undefined = undefined;
+		let latestService: models.ServiceDto;
 		ctcs.forEach(c => {
-			const s = c.services.find(it => svcId === it.id);
+			const s: models.ServiceDto|undefined = c.services!.find(it => svcId === it.id);
 			if (s && (!latestService || moment(s.valueDate).isAfter(moment(latestService.valueDate)))) {
 				latestContact = c;
 				latestService = s;
@@ -114,12 +117,12 @@ export class IccContactXApi extends iccContactApi {
 		return latestContact;
 	}
 
-	filteredServices(ctcs, filter) {
-		const byIds = {};
+	filteredServices(ctcs: Array<models.ContactDto>, filter:any): Array<models.ServiceDto> {
+		const byIds:{[key: string]: models.ServiceDto} = {};
 		ctcs.forEach(c => (c.services || []).filter(s => filter(s, c)).forEach(s => {
-			const ps = byIds[s.id];
+			const ps = byIds[s.id!];
 			if (!ps || !ps.modified || s.modified && ps.modified < s.modified) {
-				byIds[s.id] = s;
+				byIds[s.id!] = s;
 				s.contactId = c.id;
 			}
 		}));
@@ -127,33 +130,33 @@ export class IccContactXApi extends iccContactApi {
 	}
 
 	//Return a promise
-	filterServices(ctcs, filter) {
+	filterServices(ctcs:Array<models.ContactDto>, filter:any): Promise<Array<models.ServiceDto>> {
 		return Promise.resolve(this.filteredServices(ctcs, filter));
 	}
 
-	services(ctc, label) {
-		return ctc.services.filter(s => s.label === label);
+	services(ctc:models.ContactDto, label: string) {
+		return ctc.services!.filter(s => s.label === label);
 	}
 
-	preferredContent(svc, lng) {
+	preferredContent(svc: models.ServiceDto, lng:string) {
 		return svc && svc.content && (svc.content[lng] || svc.content['fr'] || (Object.keys(svc.content)[0] ? svc.content[Object.keys(svc.content)[0]] : null));
 	}
 
-	shortServiceDescription(svc, lng) {
+	shortServiceDescription(svc: models.ServiceDto, lng: string) {
 		const c = this.preferredContent(svc, lng);
 		return !c ? '' : c.stringValue || (c.numberValue || c.numberValue === 0) && c.numberValue || c.measureValue && '' + (c.measureValue.value || c.measureValue.value === 0 ? c.measureValue.value : '-') + (c.measureValue.unit ? ' ' + c.measureValue.unit : '') || c.booleanValue && svc.label || (c.medicationValue ? this.medication().medicationToString(c.medicationValue, lng) : null);
 	}
 
-	medicationValue(svc, lng) {
+	medicationValue(svc: models.ServiceDto, lng: string) {
 		const c = svc && svc.content && (svc.content[lng] || svc.content['fr'] || (Object.keys(svc.content)[0] ? svc.content[Object.keys(svc.content)[0]] : null));
 		return c && c.medicationValue;
 	}
 
-	contentHasData(c) {
+	contentHasData(c: any): boolean {
 		return c.stringValue || c.numberValue || c.measureValue || c.booleanValue || c.booleanValue === false || c.medicationValue || c.documentId;
 	}
 
-	localize(e, lng) {
+	localize(e: any, lng: string) {
 		if (!e) {
 			return null;
 		}
@@ -182,21 +185,21 @@ export class IccContactXApi extends iccContactApi {
 		* @returns {*}
 		*/
 
- promoteServiceInContact(ctc, user, ctcs, svc, formId, poaIds, heIds, init)  {
+ promoteServiceInContact(ctc: models.ContactDto, user: models.UserDto, ctcs: Array<models.ContactDto>, svc: models.ServiceDto, formId: string, poaIds: {[key: string]: string[]}, heIds: Array<string>, init:any)  {
 	 if (!ctc) {
 		 return null;
 	 }
-	 const existing = ctc.services.find(s => s.id === svc.id);
+	 const existing = ctc.services!.find(s => s.id === svc.id);
 	 const promoted = _.extend(_.extend(existing || {}, svc), { author: user.id, responsible: user.healthcarePartyId, modified: new Date().getTime() });
 	 if (!existing) {
 		 (ctc.services || (ctc.services = [])).push(promoted);
 	 }
-			 const currentScs = ctc.subContacts.filter(csc => csc.services.indexOf(svc.id) >= 0);
+			 const currentScs = ctc.subContacts!.filter(csc => csc.services!.reduce(function (acc: Array<models.ServiceLink>, link) {link.serviceId == svc.id! && acc.push(link); return acc;}, [])[0] >= 0);
 
 	 //Rearrange poaIds and heIds as a hierarchy
-	 const hierarchyOfHeAndPoaIds = {}
+	 const hierarchyOfHeAndPoaIds : {[key: string]: Array<any>} = {};
 			 ;(heIds || []).forEach(id => hierarchyOfHeAndPoaIds[id] = [])
-			 Object.keys(poaIds || {}).forEach(k => {
+			 Object.keys(poaIds || {}).forEach((k: string) => {
 					 const poas = hierarchyOfHeAndPoaIds[k]
 					 if (poas) {
 							 hierarchyOfHeAndPoaIds[k] = _.concat(poas, poaIds[k])
@@ -207,38 +210,38 @@ export class IccContactXApi extends iccContactApi {
 
 			 const pastCtc = svc.contactId && svc.contactId !== ctc.id && ctcs.find(c => c.id === svc.contactId);
 			 //Make sure that all scs the svc was belonging to are copied inside the current contact
-			 pastCtc && pastCtc.subContacts.filter(psc => psc.services.some(s=>s.serviceId === svc.id)).forEach(psc => {
+			 pastCtc && pastCtc.subContacts!.filter(psc => psc.services!.some(s=>s.serviceId === svc.id)).forEach(psc => {
 					 const sameInCurrent = currentScs.find(csc => csc.formId === psc.formId && csc.planOfActionId === psc.planOfActionId && csc.healthElementId === psc.healthElementId)
 					 if (sameInCurrent) {
-							 if (!sameInCurrent.services.some(s => s.serviceId === svc.id)) {
-									 sameInCurrent.services.push({serviceId: svc.id})
+							 if (!sameInCurrent.services!.some(s => s.serviceId === svc.id)) {
+									 sameInCurrent.services!.push({serviceId: svc.id})
 							 }
 					 } else {
 							 const newSubContact = _.assign(_.assign({}, psc), {services: [{serviceId: svc.id}]})
-							 ctc.subContacts.push(newSubContact)
+							 ctc.subContacts!.push(newSubContact)
 			 currentScs.push(newSubContact)
 					 }
 			 })
 
 			 Object.keys(hierarchyOfHeAndPoaIds && hierarchyOfHeAndPoaIds.size ?  hierarchyOfHeAndPoaIds : {null:[]}).forEach( heId => {
 					 const subPoaIds = hierarchyOfHeAndPoaIds[heId]
-					 ;((subPoaIds || []).size ? subPoaIds : [null]).forEach(poaId => {
+					 ;((subPoaIds || []).length ? subPoaIds : [null]).forEach(poaId => {
 							 //Create or assign subcontacts for all pairs he/poa (can be null/null)
-							 let sc = ctc.subContacts.find(sc => (formId === undefined || sc.formId === formId) && sc.planOfActionId === poaId && sc.healthElementId === heId);
+							 let sc = ctc.subContacts!.find(sc => (formId === undefined || sc.formId === formId) && sc.planOfActionId === poaId && sc.healthElementId === heId);
 							 if (!sc) {
-									 ctc.subContacts.push(sc = {formId: formId || null, planOfActionId: poaId, healthElementId: heId, services: []});
+									 ctc.subContacts!.push(sc = {formId: formId || undefined, planOfActionId: poaId, healthElementId: heId, services: []});
 							 }
 
 							 const currentSc = currentScs.find(aSc => sc === aSc) || currentScs.find(aSc =>
-									 (!aSc.planOfActionId || aSc.planOfActionId === sc.planOfActionId)
-									 && (!aSc.healthElementId || aSc.healthElementId === sc.healthElementId)
-									 && (!aSc.formId || aSc.formId === sc.formId)
+									 (!aSc.planOfActionId || aSc.planOfActionId === sc!.planOfActionId)
+									 && (!aSc.healthElementId || aSc.healthElementId === sc!.healthElementId)
+									 && (!aSc.formId || aSc.formId === sc!.formId)
 							 ) // Find a compatible sc: one that does not contain extra and ≠ information than the destination
 
 							 if (currentSc && (currentSc !== sc)) {
-									 currentSc.splice(currentSc.services.indexOf(svc.id), 1);
+									 currentSc.splice(currentSc.services!.reduce(function (acc: Array<models.ServiceLink>, link) {link.serviceId == svc.id! && acc.push(link); return acc;}, [])[0], 1);//TODO splice ??
 							 }
-			 if (!sc.services.some(s => s.serviceId === svc.id)) { sc.services.push({serviceId: svc.id}) }
+			 if (!sc.services!.some(s => s.serviceId === svc.id)) { sc.services!.push({serviceId: svc.id}) }
 					 })
 			 })
 
@@ -246,14 +249,14 @@ export class IccContactXApi extends iccContactApi {
 	 return init && init(svc) || svc;
  }
 
-	isNumeric(svc, lng) {
+	isNumeric(svc:models.ServiceDto, lng: string) {
 		const c = this.preferredContent(svc, lng);
 		return c && (c.measureValue || c.numberValue || c.numberValue == 0);
 	}
 
 	service() {
 		return {
-			newInstance: function (user, s) {
+			newInstance: function (user: models.UserDto, s: any) {
 				return _.extend({
 					id: this.crypto.randomUuid(),
 					_type: 'org.taktik.icure.entities.embed.Service',
@@ -293,22 +296,22 @@ export class IccContactXApi extends iccContactApi {
 				'betweenmeals': 10000,
 				'aftermeal': 20000
 			},
-			'medicationNameToString': function (m, lang) {
-				return m.compoundPrescription ? m.compoundPrescription : m.substanceProduct ? self.productToString(m.substanceProduct, lang) : self.productToString(m.medicinalProduct, lang);
+			'medicationNameToString': function (m:any): string {
+				return m.compoundPrescription ? m.compoundPrescription : m.substanceProduct ? self.productToString(m.substanceProduct) : self.productToString(m.medicinalProduct);
 			},
-			'medicationToString': function (m, lang) {
-				let res = `${self.medicationNameToString(m, lang)}, ${self.posologyToString(m, lang)}`;
+			'medicationToString': function (m:any, lang: string) {
+				let res = `${self.medicationNameToString(m)}, ${self.posologyToString(m, lang)}`;
 				res = m.numberOfPackages ? `${m.numberOfPackages} ${m.numberOfPackages > 1 ? this.i18n[lang].packagesOf : this.i18n[lang].packageOf} ${res}` : res;
 				res = m.duration ? `${res} ${this.i18n[lang].during} ${self.durationToString(m.duration)}` : res;
 				return res;
 			}.bind(this),
-			'productToString': function (m, lang) {
+			'productToString': function (m:any): string {
 				if (!m) {
 					return "";
 				}
 				return m.intendedname;
 			}.bind(this),
-			'posologyToString': function (m, lang) {
+			'posologyToString': function (m:any, lang:string) {
 				if (m.instructionForPatient && m.instructionForPatient.length) {
 					return m.instructionForPatient;
 				}
@@ -319,7 +322,7 @@ export class IccContactXApi extends iccContactApi {
 				let unit = m.regimen[0].administratedQuantity && m.regimen[0].administratedQuantity.administrationUnit ? m.regimen[0].administratedQuantity.administrationUnit.code : m.regimen[0].administratedQuantity && m.regimen[0].administratedQuantity.unit;
 				let quantity = m.regimen[0].administratedQuantity && m.regimen[0].administratedQuantity.quantity;
 
-				m.regimen.slice(1).find(ri => {
+				m.regimen.slice(1).find((ri: any) => {
 					let oUnit = ri.administratedQuantity && ri.administratedQuantity.administrationUnit ? ri.administratedQuantity.administrationUnit.code : ri.administratedQuantity && ri.administratedQuantity.unit;
 					let oQuantity = ri.administratedQuantity && ri.administratedQuantity.quantity;
 
@@ -332,18 +335,18 @@ export class IccContactXApi extends iccContactApi {
 				const cplxRegimen = !unit || quantity < 0;
 				const quantityUnit = cplxRegimen ? `1 ${this.i18n[lang].take_s_}` : `${quantity} ${unit || this.i18n[lang].take_s_}`;
 
-				const dayPeriod = m.regimen.find(r => r.weekday !== null && r.weekday !== undefined) ? this.i18n[lang].weekly : m.regimen.find(r => r.date) ? this.i18n[lang].monthly : this.i18n[lang].daily;
+				const dayPeriod = m.regimen.find((r: any) => r.weekday !== null && r.weekday !== undefined) ? this.i18n[lang].weekly : m.regimen.find((r: any) => r.date) ? this.i18n[lang].monthly : this.i18n[lang].daily;
 
 				return `${quantityUnit}, ${m.regimen.length} x ${dayPeriod}, ${_.sortBy(m.regimen, r => (r.date ? r.date * 1000000 : 29990000000000) + (r.dayNumber || 0) * 1000000 + (r.weekday && r.weekday.weekNumber || 0) * 7 * 1000000 + (r.timeOfDay ? r.timeOfDay : r.dayPeriod && r.dayPeriod.code ? self.regimenScores[r.dayPeriod.code] : 0)).map(r => cplxRegimen ? self.regimenToExtString(r, lang) : self.regimenToString(r, lang)).join(', ')}`;
 			}.bind(this),
-			'durationToString': function (d, lang) {
-				return d.value ? `${d.value} ${this.localize(d.unit.label, lang)}` : '';
+			'durationToString': function (d: models.DurationDto, lang: string) {
+				return d.value ? `${d.value} ${this.localize(d.unit!.label, lang)}` : '';
 			}.bind(this),
-			'regimenToExtString': function (r, lang) {
+			'regimenToExtString': function (r:models.RegimenItemDto, lang: string) {
 				const desc = self.regimenToString(r, lang);
 				return (r.administratedQuantity && r.administratedQuantity.quantity && desc ? `${desc} (${r.administratedQuantity.quantity} ${(r.administratedQuantity.administrationUnit ? r.administratedQuantity.administrationUnit.code : r.administratedQuantity.unit) || this.i18n[lang].take_s_})` : desc) || '';
 			}.bind(this),
-			'regimenToString': function (r, lang) {
+			'regimenToString': function (r:models.RegimenItemDto, lang: string) {
 				let res = r.date ? `${this.i18n[lang].the} ${moment(r.date).format('DD/MM/YYYY')}` : r.dayNumber ? `${this.i18n[lang].onDay} ${r.dayNumber}` : r.weekday && r.weekday.weekday ? `${this.i18n[lang].on} ${r.weekday.weekday}` : null;
 				if (r.dayPeriod && r.dayPeriod.code && r.dayPeriod.code.length) {
 					res = res ? `${res} ${this.i18n[lang][r.dayPeriod.code] || this.localize(r.dayPeriod.label) || r.dayPeriod.code}` : this.i18n[lang][r.dayPeriod.code] || this.localize(r.dayPeriod.label) || r.dayPeriod.code;
@@ -354,7 +357,7 @@ export class IccContactXApi extends iccContactApi {
 				}
 				return res;
 			}.bind(this),
-			'localize': function (s, lang) {
+			'localize': function (s:any, lang: string) {
 				if (!s) {
 					return s;
 				}
