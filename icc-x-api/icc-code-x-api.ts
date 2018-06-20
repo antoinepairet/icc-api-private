@@ -1,88 +1,131 @@
-import {iccCodeApi} from "../icc-api/iccApi";
+import { iccCodeApi } from "../icc-api/iccApi"
 
-import * as codeLanguages from './rsrc/codelng';
-import * as icd10 from './rsrc/icd10';
-import * as icpc2 from './rsrc/icpc2';
+import * as codeLanguages from "./rsrc/codelng"
+import * as icd10 from "./rsrc/icd10"
+import * as icpc2 from "./rsrc/icpc2"
 
-import * as _ from "lodash";
-import {XHR} from "../icc-api/api/XHR";
-import {CodeDto} from "../icc-api/model/CodeDto";
+import * as _ from "lodash"
+import { XHR } from "../icc-api/api/XHR"
+import { CodeDto } from "../icc-api/model/CodeDto"
 
 export class IccCodeXApi extends iccCodeApi {
+  icd10: any = icd10
+  icpc2: any = icpc2
+  codeLanguages: any = codeLanguages
 
-    icd10: any = icd10;
-    icpc2: any = icpc2;
-    codeLanguages: any = codeLanguages;
+  constructor(host: string, headers: Array<XHR.Header>) {
+    super(host, headers)
+  }
 
-    constructor(host: string, headers: Array<XHR.Header>) {
-        super(host, headers);
-    }
-
-    icdChapters(listOfCodes: Array<string>) {
-        return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icd10).find(([k, v]) => {
-            const parts = k.split(/-/);
-            return code.substr(0, 3) >= parts[0] && code.substr(0, 3) <= parts[1];
-        })])), (acc: any, pairOfRangeAndIcdInfo, code) => {
-            if (!pairOfRangeAndIcdInfo) {
-                return {};
-            }
-            const shortKey = pairOfRangeAndIcdInfo[0].substr(0, 2)
-            ;(acc[shortKey] || (acc[shortKey] = {
-                code: shortKey,
-                descr: pairOfRangeAndIcdInfo[1],
-                subCodes: []
-            })).subCodes.push(code);
-            return acc;
-        }, {})), (c: any) => c.shortKey));
-    }
-
-    icpcChapters(listOfCodes: Array<string>) {
-        return Promise.resolve(_.sortBy(_.values(_.reduce(_.fromPairs(listOfCodes.map(code => [code, _.toPairs(this.icpc2).find(([k, v]) => k === code.substr(0, 1).toUpperCase())])),
+  icdChapters(listOfCodes: Array<string>) {
+    return Promise.resolve(
+      _.sortBy(
+        _.values(
+          _.reduce(
+            _.fromPairs(
+              listOfCodes.map(code => [
+                code,
+                _.toPairs(this.icd10).find(([k, v]) => {
+                  const parts = k.split(/-/)
+                  return code.substr(0, 3) >= parts[0] && code.substr(0, 3) <= parts[1]
+                })
+              ])
+            ),
             (acc: any, pairOfRangeAndIcdInfo, code) => {
-                if (!pairOfRangeAndIcdInfo) {
-                    return {};
-                }
-                const shortKey = pairOfRangeAndIcdInfo[0]
-                ;(acc[shortKey] || (acc[shortKey] = {
-                    code: shortKey,
-                    descr: pairOfRangeAndIcdInfo[1],
-                    subCodes: []
-                })).subCodes.push(code);
-                return acc;
-            }, {})), (c: any) => c.shortKey));
-    }
+              if (!pairOfRangeAndIcdInfo) {
+                return {}
+              }
+              const shortKey = pairOfRangeAndIcdInfo[0].substr(0, 2)
+              ;(
+                acc[shortKey] ||
+                (acc[shortKey] = {
+                  code: shortKey,
+                  descr: pairOfRangeAndIcdInfo[1],
+                  subCodes: []
+                })
+              ).subCodes.push(code)
+              return acc
+            },
+            {}
+          )
+        ),
+        (c: any) => c.shortKey
+      )
+    )
+  }
 
-    languageForType(type: string, lng: string) {
-        const availableLanguages = this.codeLanguages[type];
-        return availableLanguages && availableLanguages.indexOf(lng) >= 0 ? lng : 'fr';
-    }
+  icpcChapters(listOfCodes: Array<string>) {
+    return Promise.resolve(
+      _.sortBy(
+        _.values(
+          _.reduce(
+            _.fromPairs(
+              listOfCodes.map(code => [
+                code,
+                _.toPairs(this.icpc2).find(([k, v]) => k === code.substr(0, 1).toUpperCase())
+              ])
+            ),
+            (acc: any, pairOfRangeAndIcdInfo, code) => {
+              if (!pairOfRangeAndIcdInfo) {
+                return {}
+              }
+              const shortKey = pairOfRangeAndIcdInfo[0]
+              ;(
+                acc[shortKey] ||
+                (acc[shortKey] = {
+                  code: shortKey,
+                  descr: pairOfRangeAndIcdInfo[1],
+                  subCodes: []
+                })
+              ).subCodes.push(code)
+              return acc
+            },
+            {}
+          )
+        ),
+        (c: any) => c.shortKey
+      )
+    )
+  }
 
-    normalize(c: CodeDto | string) {
-        return c instanceof String ? {
-                id: c,
-                type: c.split(/\|/)[0],
-                code: c.split(/\|/)[1],
-                version: c.split(/\|/)[2]
-            } :
-            (c as CodeDto).type && (c as CodeDto).code && !(c as CodeDto).id ?
-                {
-                    id: (c as CodeDto).type + '|' + (c as CodeDto).code + '|' + ((c as CodeDto).version || '1'),
-                    type: (c as CodeDto).type,
-                    code: (c as CodeDto).code,
-                    version: (c as CodeDto).version || '1'
-                } :
-                (c as CodeDto).id && (!(c as CodeDto).code || !(c as CodeDto).type || !(c as CodeDto).version) ?
-                    {
-                        id: (c as CodeDto).id,
-                        type: (c as CodeDto).id!.split(/\|/)[0],
-                        code: (c as CodeDto).id!.split(/\|/)[1],
-                        version: (c as CodeDto).id!.split(/\|/)[2]
-                    } : {
-                        id: (c as CodeDto).id!,
-                        type: (c as CodeDto).type,
-                        code: (c as CodeDto).code,
-                        version: (c as CodeDto).version || '1'
-                    };
-    }
+  languageForType(type: string, lng: string) {
+    const availableLanguages = this.codeLanguages[type]
+    return availableLanguages && availableLanguages.indexOf(lng) >= 0 ? lng : "fr"
+  }
 
+  normalize(c: CodeDto | string) {
+    return c instanceof String
+      ? {
+          id: c,
+          type: c.split(/\|/)[0],
+          code: c.split(/\|/)[1],
+          version: c.split(/\|/)[2]
+        }
+      : (c as CodeDto).type && (c as CodeDto).code && !(c as CodeDto).id
+        ? {
+            id:
+              (c as CodeDto).type +
+              "|" +
+              (c as CodeDto).code +
+              "|" +
+              ((c as CodeDto).version || "1"),
+            type: (c as CodeDto).type,
+            code: (c as CodeDto).code,
+            version: (c as CodeDto).version || "1"
+          }
+        : (c as CodeDto).id &&
+          (!(c as CodeDto).code || !(c as CodeDto).type || !(c as CodeDto).version)
+          ? {
+              id: (c as CodeDto).id,
+              type: (c as CodeDto).id!.split(/\|/)[0],
+              code: (c as CodeDto).id!.split(/\|/)[1],
+              version: (c as CodeDto).id!.split(/\|/)[2]
+            }
+          : {
+              id: (c as CodeDto).id!,
+              type: (c as CodeDto).type,
+              code: (c as CodeDto).code,
+              version: (c as CodeDto).version || "1"
+            }
+  }
 }

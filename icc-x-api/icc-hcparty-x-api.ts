@@ -1,18 +1,20 @@
-import { iccHcpartyApi } from "../icc-api/iccApi";
+import { iccHcpartyApi } from "../icc-api/iccApi"
 
-import {XHR} from "../icc-api/api/XHR";
-
+import { XHR } from "../icc-api/api/XHR"
 
 export class IccHcpartyXApi extends iccHcpartyApi {
+  hcPartyKeysCache: { [key: string]: string } = {}
 
-    hcPartyKeysCache: { [key: string]: string; } = {};
+  constructor(host: string, headers: Array<XHR.Header>) {
+    super(host, headers)
+  }
 
-    constructor(host: string, headers: Array<XHR.Header>) {
-        super(host, headers);
-    }
-
-    getHcPartyKeysForDelegate(healthcarePartyId: string) {
-        const cached = this.hcPartyKeysCache[healthcarePartyId];
-        return cached ? Promise.resolve(cached) : super.getHcPartyKeysForDelegate(healthcarePartyId).then(r => this.hcPartyKeysCache[healthcarePartyId] = r);
-    }
+  getHcPartyKeysForDelegate(healthcarePartyId: string) {
+    const cached = this.hcPartyKeysCache[healthcarePartyId]
+    return cached
+      ? Promise.resolve(cached)
+      : super
+          .getHcPartyKeysForDelegate(healthcarePartyId)
+          .then(r => (this.hcPartyKeysCache[healthcarePartyId] = r))
+  }
 }
