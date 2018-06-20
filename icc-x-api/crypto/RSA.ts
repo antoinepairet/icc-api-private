@@ -113,7 +113,7 @@ export class RSAUtils {
      * @param publicKeyData should be the key data based on the format.
      * @returns {Promise|*}
      */
-    importKeyPair(privateKeyFormat: string, privateKeydata: JsonWebKey | ArrayBuffer, publicKeyFormat: string, publicKeyData: JsonWebKey | ArrayBuffer): Promise<{ publicKey: CryptoKey, privateKey: CryptoKey }> {
+    importKeyPair(privateKeyFormat: string, privateKeydata: JsonWebKey | ArrayBuffer, publicKeyFormat: string, publicKeyData: JsonWebKey | ArrayBuffer) {
         var extractable = true;
         var privPromise = window.crypto.subtle.importKey(privateKeyFormat, privateKeydata, this.rsaHashedParams, extractable, ['decrypt']);
         var pubPromise = window.crypto.subtle.importKey(publicKeyFormat, publicKeyData, this.rsaHashedParams, extractable, ['encrypt']);
@@ -165,14 +165,12 @@ export class RSAUtils {
         return new Promise((resolve, reject) => {
             try {
                 var jwkKeyPair = JSON.parse(localStorage.getItem(this.rsaLocalStoreIdPrefix + id) as string);
-                this.importKeyPair('jwk', jwkKeyPair.privateKey, 'jwk', jwkKeyPair.publicKey).then((keyPair: { publicKey: CryptoKey, privateKey: CryptoKey }) => {
-                    resolve(keyPair);
-                }, function (err: any) {
-                    console.log('Error in RSA.importKeyPair: ' + err);
-                    reject(new Error(err));
-                });
+                this.importKeyPair('jwk', jwkKeyPair.privateKey, 'jwk', jwkKeyPair.publicKey).then(resolve, err => {
+                    console.log('Error in RSA.importKeyPair: ' + err)
+                    reject(err)
+                })
             } catch (err) {
-                reject(new Error(err));
+                reject(err)
             }
         });
     }

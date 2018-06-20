@@ -28,31 +28,39 @@ export class AESUtils {
      * @param encryptedData (ArrayBuffer)
      * @returns {Promise} will be ArrayBuffer
      */
-    decrypt(cryptoKey: CryptoKey, encryptedData: ArrayBuffer|Uint8Array): PromiseLike<ArrayBuffer|null> {
-        if (!cryptoKey) {
-            return Promise.resolve(null);
-        }
-        if(encryptedData instanceof ArrayBuffer) { var encryptedDataUnit8 = new Uint8Array(encryptedData)}else{var encryptedDataUnit8 = encryptedData};
-        var aesAlgorithmEncrypt = { name: this.aesAlgorithmEncrypt.name, iv: encryptedDataUnit8.subarray(0, this.ivLength)
+    decrypt(cryptoKey: CryptoKey, encryptedData: ArrayBuffer|Uint8Array) {
+        return new Promise((resolve: (value: ArrayBuffer | null) => any, reject: (reason: any) => any) => {
+            if (!cryptoKey) {
+                resolve(null);
+            }
+            if (encryptedData instanceof ArrayBuffer) {
+                var encryptedDataUnit8 = new Uint8Array(encryptedData)
+            } else {
+                var encryptedDataUnit8 = encryptedData
+            }
+            ;
+            var aesAlgorithmEncrypt = {
+                name: this.aesAlgorithmEncrypt.name, iv: encryptedDataUnit8.subarray(0, this.ivLength)
 
-            /*
-* IF THIS BIT OF CODE PRODUCES A DOMEXCEPTION CODE 0 ERROR, IT MIGHT BE RELATED TO THIS:
-*
-* NOTOK:
-* if (!hcparty.hcPartyKeys && !hcparty.hcPartyKeys[hcpartyId] && hcparty.hcPartyKeys[hcpartyId].length !== 2) {
-*   throw 'No hcPartyKey for this Healthcare party(' + hcpartyId + ').';
-* }
-* var delegateHcPartyKey = hcparty.hcPartyKeys[hcpartyId][1];
-*
-* SHOULD BE:
-* var delegatorId = patient.delegations[hcpartyId][0].owner;
-* if (!hcparty.hcPartyKeys && !hcparty.hcPartyKeys[delegatorId] && hcparty.hcPartyKeys[delegatorId].length !== 2) {
-*   throw 'No hcPartyKey for this Healthcare party(' + delegatorId + ').';
-* }
-* var delegateHcPartyKey = hcparty.hcPartyKeys[delegatorId][1];
-*/
-        };
-        return window.crypto.subtle.decrypt(aesAlgorithmEncrypt, cryptoKey, encryptedDataUnit8.subarray(this.ivLength, encryptedDataUnit8.length));
+                /*
+    * IF THIS BIT OF CODE PRODUCES A DOMEXCEPTION CODE 0 ERROR, IT MIGHT BE RELATED TO THIS:
+    *
+    * NOTOK:
+    * if (!hcparty.hcPartyKeys && !hcparty.hcPartyKeys[hcpartyId] && hcparty.hcPartyKeys[hcpartyId].length !== 2) {
+    *   throw 'No hcPartyKey for this Healthcare party(' + hcpartyId + ').';
+    * }
+    * var delegateHcPartyKey = hcparty.hcPartyKeys[hcpartyId][1];
+    *
+    * SHOULD BE:
+    * var delegatorId = patient.delegations[hcpartyId][0].owner;
+    * if (!hcparty.hcPartyKeys && !hcparty.hcPartyKeys[delegatorId] && hcparty.hcPartyKeys[delegatorId].length !== 2) {
+    *   throw 'No hcPartyKey for this Healthcare party(' + delegatorId + ').';
+    * }
+    * var delegateHcPartyKey = hcparty.hcPartyKeys[delegatorId][1];
+    */
+            };
+            window.crypto.subtle.decrypt(aesAlgorithmEncrypt, cryptoKey, encryptedDataUnit8.subarray(this.ivLength, encryptedDataUnit8.length)).then(resolve, err => reject('AES decryption failed: '+ err))
+        })
     }
 
     // generate an AES key
@@ -62,25 +70,17 @@ export class AESUtils {
      * @returns {Promise} either Hex string or CryptoKey
      */
     generateCryptoKey(toHex: boolean) {
-        if (toHex === undefined || !toHex) {
-            var extractable = true;
-            var keyUsages = ['decrypt', 'encrypt'];
-            return window.crypto.subtle.generateKey(this.aesKeyGenParams, extractable, keyUsages);
-        } else {
-            return new Promise( (resolve) => {
-                var extractable = true;
-                var keyUsages = ['decrypt', 'encrypt'];
-                window.crypto.subtle.generateKey(this.aesKeyGenParams, extractable, keyUsages).then( (k) => {
-                    return this.exportKey(k, 'raw');
-                }, function (err) {
-                    console.log('Error in generateKey: ' + err);
-                }).then( (rawK) => {
-                    resolve(utils.ua2hex(rawK as ArrayBuffer));
-                }, function (err) {
-                    new Error(err);
-                });
-            });
-        }
+        return new Promise((resolve: (value: CryptoKey|string) => any, reject: (reason: any) => any) => {
+            const extractable = true;
+            const keyUsages = ['decrypt', 'encrypt'];
+            if (toHex === undefined || !toHex) {
+                return window.crypto.subtle.generateKey(this.aesKeyGenParams, extractable, keyUsages).then(resolve, reject)
+            } else {
+                return window.crypto.subtle.generateKey(this.aesKeyGenParams, extractable, keyUsages)
+                    .then(k => this.exportKey(k, 'raw'), reject)
+                    .then(raw => resolve(utils.ua2hex(raw)), reject)
+            }
+        })
     }
 
     generateIV(ivByteLength:number) {
@@ -95,8 +95,10 @@ export class AESUtils {
      * @param format will be 'raw' or 'jwk'
      * @returns {Promise} will the AES Key
      */
-    exportKey(cryptoKey: CryptoKey, format: string) : PromiseLike<ArrayBuffer|JsonWebKey> {
-        return window.crypto.subtle.exportKey(format, cryptoKey);
+    exportKey(cryptoKey: CryptoKey, format: string) {
+        return new Promise((resolve: (value: ArrayBuffer|JsonWebKey) => any, reject: (reason: any) => any) => {
+            return window.crypto.subtle.exportKey(format, cryptoKey).then(resolve, reject)
+        })
     }
 
     /**
@@ -111,11 +113,12 @@ export class AESUtils {
      * @param aesKey
      * @returns {*}
      */
-    importKey(format: string, aesKey: JsonWebKey|ArrayBuffer|Uint8Array): PromiseLike<CryptoKey> {
-        //TODO test
-        var extractable = true;
-        var keyUsages = ['decrypt', 'encrypt'];
-        return window.crypto.subtle.importKey(format, aesKey, this.aesKeyGenParams.name, extractable, keyUsages);
+    importKey(format: string, aesKey: JsonWebKey|ArrayBuffer|Uint8Array) {
+        return new Promise((resolve: (value: CryptoKey) => any, reject: (reason: any) => any) => {
+            var extractable = true;
+            var keyUsages = ['decrypt', 'encrypt'];
+            return window.crypto.subtle.importKey(format, aesKey, this.aesKeyGenParams.name, extractable, keyUsages).then(resolve, reject)
+        })
     }
 
 }

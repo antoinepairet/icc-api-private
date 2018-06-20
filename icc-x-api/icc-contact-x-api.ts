@@ -71,38 +71,40 @@ export class IccContactXApi extends iccContactApi {
 	}
 
 	decrypt(hcpartyId: string, ctcs: Array<models.ContactDto>) {
-		return Promise.all(ctcs.map(ctc => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, ctc.delegations!).then(function (decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) {
-			var collatedAesKeys: {[key: string]: CryptoKey;} = {};
-			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
-			return this.crypto.decryptDelegationsSFKs(ctc.delegations![hcpartyId], collatedAesKeys, ctc.id).then((sfks: Array<{ delegatorId: string, key: CryptoKey }>) => {
-				return Promise.all(ctc.services!.map(svc => {
-					if (svc.encryptedContent || svc.encryptedSelf) {
-						return AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ''))).then((key: CryptoKey) => svc.encryptedContent ? new Promise((resolve, reject) => AES.decrypt(key, utils.text2ua(atob(svc.encryptedContent!))).then(c => resolve({ content: JSON.parse(utils.ua2utf8(c!)) })).catch((err: Error) => {
-							console.log("Error, could not decrypt: " + err);resolve();
-						})) : svc.encryptedSelf ? new Promise((resolve, reject) => AES.decrypt(key, utils.text2ua(atob(svc.encryptedSelf!))).then((s: ArrayBuffer|null) => resolve(JSON.parse(utils.ua2utf8(s!)))).catch((err: Error) => {
-							console.log("Error, could not decrypt: " + err);resolve();
-						})) : null).then(decrypted => {
-							decrypted && _.assign(svc, decrypted);
-							return svc;
-						});
-					} else {
-						return Promise.resolve(svc);
-					}
-				})).then(svcs => {
-					ctc.services = svcs;
-					//console.log('ES:'+ctc.encryptedSelf)
-					return ctc.encryptedSelf ? AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ''))).then(key => AES.decrypt(key, utils.text2ua(atob(ctc.encryptedSelf!))).then(dec => {
-						dec && _.assign(ctc, JSON.parse(utils.ua2utf8(dec)));
-						return ctc;
-					})) : ctc;
-				}).catch(function (e) {
-					console.log(e);
-				});
-			});
-		}.bind(this)))).catch(function (e) {
-			console.log(e);
-		});
-	}
+        return Promise.all(ctcs.map(ctc => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, ctc.delegations!).then((decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) => {
+            var collatedAesKeys: { [key: string]: CryptoKey; } = {};
+            decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
+            return this.crypto.decryptDelegationsSFKs(ctc.delegations![hcpartyId], collatedAesKeys, ctc.id!).then((sfks: Array<{ delegatorId: string, key: CryptoKey }>) => {
+                return Promise.all(ctc.services!.map(svc => {
+                    if (svc.encryptedContent || svc.encryptedSelf) {
+                        return AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, '')))
+                            .then((key: CryptoKey) =>
+                                svc.encryptedContent ? AES.decrypt(key, utils.text2ua(atob(svc.encryptedContent!))).then(c => ({content: JSON.parse(utils.ua2utf8(c!))}))
+                                    : svc.encryptedSelf ? AES.decrypt(key, utils.text2ua(atob(svc.encryptedSelf!))).then(s => s && JSON.parse(utils.ua2utf8(s!)))
+                                    : Promise.resolve(null))
+                            .then(decrypted => {
+                                decrypted && _.assign(svc, decrypted);
+                                return svc;
+                            })
+                            .catch(err => console.log(err))
+                    } else {
+                        return Promise.resolve(svc);
+                    }
+                })).then(svcs => {
+                    ctc.services = svcs;
+                    //console.log('ES:'+ctc.encryptedSelf)
+                    return ctc.encryptedSelf ? AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ''))).then(key => AES.decrypt(key, utils.text2ua(atob(ctc.encryptedSelf!))).then(dec => {
+                        dec && _.assign(ctc, JSON.parse(utils.ua2utf8(dec)));
+                        return ctc;
+                    })) : ctc;
+                }).catch(function (e) {
+                    console.log(e);
+                });
+            });
+        }))).catch(function (e) {
+            console.log(e);
+        });
+    }
 
 	contactOfService(ctcs: Array<models.ContactDto>, svcId:string): models.ContactDto|undefined {
 		let latestContact: models.ContactDto|undefined = undefined;
@@ -194,7 +196,7 @@ export class IccContactXApi extends iccContactApi {
 	 if (!existing) {
 		 (ctc.services || (ctc.services = [])).push(promoted);
 	 }
-			 const currentScs = ctc.subContacts!.filter(csc => csc.services!.reduce(function (acc: Array<models.ServiceLink>, link) {link.serviceId == svc.id! && acc.push(link); return acc;}, [])[0] >= 0);
+	 const currentScs = (ctc.subContacts||[]).filter(csc => (csc.services||[]).some(s=>s.serviceId === svc.id));
 
 	 //Rearrange poaIds and heIds as a hierarchy
 	 const hierarchyOfHeAndPoaIds : {[key: string]: Array<any>} = {};
@@ -208,7 +210,10 @@ export class IccContactXApi extends iccContactApi {
 					 }
 			 })
 
-			 const pastCtc = svc.contactId && svc.contactId !== ctc.id && ctcs.find(c => c.id === svc.contactId);
+        const pastCtc = svc.contactId && svc.contactId !== ctc.id && ctcs.find(c => c.id === svc.contactId) || ctcs.reduce((selected,c) => {
+            const candidate = (c.services||[]).find(s => s.id === svc.id);
+            return ctc.id !== c.id && candidate  && (selected[0] === null || this.api.moment(selected[0].modified).isBefore(this.api.moment(candidate.modified))) ? [candidate, c] : selected
+		},[null,null])[1]
 			 //Make sure that all scs the svc was belonging to are copied inside the current contact
 			 pastCtc && pastCtc.subContacts!.filter(psc => psc.services!.some(s=>s.serviceId === svc.id)).forEach(psc => {
 					 const sameInCurrent = currentScs.find(csc => csc.formId === psc.formId && csc.planOfActionId === psc.planOfActionId && csc.healthElementId === psc.healthElementId)
@@ -224,6 +229,7 @@ export class IccContactXApi extends iccContactApi {
 			 })
 
 			 Object.keys(hierarchyOfHeAndPoaIds && hierarchyOfHeAndPoaIds.size ?  hierarchyOfHeAndPoaIds : {null:[]}).forEach( heId => {
+                    if (heId === "null") { heId = null }
 					 const subPoaIds = hierarchyOfHeAndPoaIds[heId]
 					 ;((subPoaIds || []).length ? subPoaIds : [null]).forEach(poaId => {
 							 //Create or assign subcontacts for all pairs he/poa (can be null/null)
