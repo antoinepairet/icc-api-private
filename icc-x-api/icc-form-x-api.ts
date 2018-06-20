@@ -60,11 +60,11 @@ export class IccFormXApi extends iccFormApi {
 		});
 	}
 
-	decrypt(hcpartyId: string, forms) {
-		return Promise.all(forms.map(form => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, form.delegations).then(function (decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) {
+	decrypt(hcpartyId: string, forms: Array<models.FormDto>) {
+		return Promise.all(forms.map(form => this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, form.delegations!).then(function (decryptedAndImportedAesHcPartyKeys: Array<{ delegatorId: string, key: CryptoKey }>) {
 			var collatedAesKeys: {[key: string]: CryptoKey;} = {};
 			decryptedAndImportedAesHcPartyKeys.forEach(k => collatedAesKeys[k.delegatorId] = k.key);
-			return this.crypto.decryptDelegationsSFKs(form.delegations[hcpartyId], collatedAesKeys, form.id).then((sfks: Array<{ delegatorId: string, key: CryptoKey }>) => {
+			return this.crypto.decryptDelegationsSFKs(form.delegations![hcpartyId], collatedAesKeys, form.id).then((sfks: Array<{ delegatorId: string, key: CryptoKey }>) => {
 				if (form.encryptedContent) {
 					return AES.importKey('raw', utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ''))).then(key => new Promise((resolve, reject) => AES.decrypt(key, utils.text2ua(atob(form.encryptedContent))).then(resolve).catch((err: Error) => {
 						console.log("Error, could not decrypt: " + err);
