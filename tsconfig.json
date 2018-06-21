@@ -18,5 +18,11 @@
     "strict": true,
     "baseUrl": "./",
     "types" : ["base64-js", "lodash"]
-  }
+  },
+  "include": [
+    "icc-api/*",
+    "icc-x-api/*",
+    "icc-api/**/*",
+    "icc-x-api/**/*"
+  ]
 }
