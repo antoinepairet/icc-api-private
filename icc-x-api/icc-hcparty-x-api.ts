@@ -2,6 +2,7 @@ import { iccHcpartyApi } from "../icc-api/iccApi"
 
 import { XHR } from "../icc-api/api/XHR"
 
+// noinspection JSUnusedGlobalSymbols
 export class IccHcpartyXApi extends iccHcpartyApi {
   hcPartyKeysCache: { [key: string]: string } = {}
 

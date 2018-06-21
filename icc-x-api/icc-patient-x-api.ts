@@ -5,6 +5,7 @@ import * as _ from "lodash"
 import { XHR } from "../icc-api/api/XHR"
 import * as models from "../icc-api/model/models"
 
+// noinspection JSUnusedGlobalSymbols
 export class IccPatientXApi extends iccPatientApi {
   crypto: IccCryptoXApi
 
@@ -13,6 +14,7 @@ export class IccPatientXApi extends iccPatientApi {
     this.crypto = crypto
   }
 
+  // noinspection JSUnusedGlobalSymbols
   newInstance(user: models.UserDto, p: any) {
     const patient = _.extend(
       {

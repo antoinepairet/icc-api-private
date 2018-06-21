@@ -37,7 +37,7 @@ export class IccCryptoXApi {
     delegateHcPartyId: string,
     encryptedHcPartyKey: string,
     encryptedForDelegator: boolean = false
-  ): PromiseLike<{ delegatorId: string; key: CryptoKey }> {
+  ): Promise<{ delegatorId: string; key: CryptoKey }> {
     const cacheKey =
       delegatorId + "|" + delegateHcPartyId + "|" + (encryptedForDelegator ? "->" : "<-")
     const res = this.hcPartyKeysCache[cacheKey]
@@ -45,22 +45,21 @@ export class IccCryptoXApi {
     if (res) {
       return Promise.resolve(res)
     } else {
-      var keyPair = this.RSA.rsaKeyPairs[hcPartyKeyOwner]
+      const keyPair = this.RSA.rsaKeyPairs[hcPartyKeyOwner]
       if (!keyPair) {
-        var keyPairInJwk = this.RSA.loadKeyPairNotImported(hcPartyKeyOwner)
+        const keyPairInJwk = this.RSA.loadKeyPairNotImported(hcPartyKeyOwner)
         if (!keyPairInJwk) {
           throw "No RSA private key for Healthcare party(" + hcPartyKeyOwner + ")."
         }
         // import the jwk formatted key
         return this.RSA.importKeyPair("jwk", keyPairInJwk.privateKey, "jwk", keyPairInJwk.publicKey)
           .then((importedKeyPair: { publicKey: CryptoKey; privateKey: CryptoKey }) => {
-            keyPair = this.RSA.rsaKeyPairs[hcPartyKeyOwner] = importedKeyPair
+            const keyPair = (this.RSA.rsaKeyPairs[hcPartyKeyOwner] = importedKeyPair)
             // Obtaining the AES Key by decrypting the HcpartyKey
             return this.RSA.decrypt(keyPair.privateKey, this.utils.hex2ua(encryptedHcPartyKey))
           })
           .then(
-            (decryptedHcPartyKey: { publicKey: CryptoKey; privateKey: CryptoKey }) =>
-              this.AES.importKey("raw", decryptedHcPartyKey),
+            (decryptedHcPartyKey: ArrayBuffer) => this.AES.importKey("raw", decryptedHcPartyKey),
             (err: Error) => console.error(err)
           )
           .then(
@@ -73,7 +72,7 @@ export class IccCryptoXApi {
       } else {
         return this.RSA.decrypt(keyPair.privateKey, this.utils.hex2ua(encryptedHcPartyKey))
           .then(
-            (decryptedHcPartyKey: Uint8Array) => this.AES.importKey("raw", decryptedHcPartyKey),
+            (decryptedHcPartyKey: ArrayBuffer) => this.AES.importKey("raw", decryptedHcPartyKey),
             (err: Error) => console.error(err)
           )
           .then(

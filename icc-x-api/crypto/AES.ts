@@ -10,7 +10,6 @@ export class AESUtils {
     name: "AES-CBC",
     length: 256
   }
-  aesLocalStoreIdPrefix = "org.taktik.icure.aes."
 
   encrypt(cryptoKey: CryptoKey, plainData: ArrayBuffer) {
     return new Promise((resolve: (value: ArrayBuffer) => any, reject: (reason: any) => any) => {
@@ -77,6 +76,7 @@ export class AESUtils {
   }
 
   // generate an AES key
+  // noinspection JSUnusedGlobalSymbols
   /**
    *
    * @param toHex boolean, if true, it returns hex String
@@ -101,6 +101,7 @@ export class AESUtils {
     )
   }
 
+  // noinspection JSMethodCanBeStatic
   generateIV(ivByteLength: number) {
     return window.crypto.getRandomValues(new Uint8Array(ivByteLength))
   }

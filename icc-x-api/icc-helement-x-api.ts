@@ -81,6 +81,7 @@ export class IccHelementXApi extends iccHelementApi {
       })
   }
 
+  // noinspection JSUnusedGlobalSymbols
   /**
    * 1. Check whether there is a delegation with 'hcpartyId' or not.
    * 2. 'fetchHcParty[hcpartyId][1]': is encrypted AES exchange key by RSA public key of him.
@@ -93,9 +94,10 @@ export class IccHelementXApi extends iccHelementApi {
    *
    * After these painful steps, you have the helements of the patient.
    *
-   * @param hcparty
+   * @param hcpartyId
    * @param patient (Promise)
    */
+
   findBy(hcpartyId: string, patient: models.PatientDto) {
     if (
       !patient.delegations ||
@@ -194,6 +196,7 @@ export class IccHelementXApi extends iccHelementApi {
     )
   }
 
+  // noinspection JSUnusedGlobalSymbols
   serviceToHealthElement(
     user: models.UserDto,
     patient: models.PatientDto,
@@ -216,6 +219,7 @@ export class IccHelementXApi extends iccHelementApi {
     })
   }
 
+  // noinspection JSUnusedGlobalSymbols, JSMethodCanBeStatic
   stringToCode(code: string) {
     const c = code.split("|")
     return new models.CodeDto({

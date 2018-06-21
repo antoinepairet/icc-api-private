@@ -91,7 +91,7 @@ export class RSAUtils {
    * @param privateKey (CryptoKey)
    * @param encryptedData (Uint8Array)
    */
-  decrypt(privateKey: CryptoKey, encryptedData: Uint8Array) {
+  decrypt(privateKey: CryptoKey, encryptedData: Uint8Array): Promise<ArrayBuffer> {
     return new Promise((resolve: (value: ArrayBuffer) => any, reject) => {
       window.crypto.subtle.decrypt(this.rsaParams, privateKey, encryptedData).then(resolve, reject)
     })

@@ -17,6 +17,7 @@ export class IccCodeXApi extends iccCodeApi {
     super(host, headers)
   }
 
+  // noinspection JSUnusedGlobalSymbols
   icdChapters(listOfCodes: Array<string>) {
     return Promise.resolve(
       _.sortBy(
@@ -25,7 +26,7 @@ export class IccCodeXApi extends iccCodeApi {
             _.fromPairs(
               listOfCodes.map(code => [
                 code,
-                _.toPairs(this.icd10).find(([k, v]) => {
+                _.toPairs(this.icd10).find(([k]) => {
                   const parts = k.split(/-/)
                   return code.substr(0, 3) >= parts[0] && code.substr(0, 3) <= parts[1]
                 })
@@ -54,6 +55,7 @@ export class IccCodeXApi extends iccCodeApi {
     )
   }
 
+  // noinspection JSUnusedGlobalSymbols
   icpcChapters(listOfCodes: Array<string>) {
     return Promise.resolve(
       _.sortBy(
@@ -62,7 +64,7 @@ export class IccCodeXApi extends iccCodeApi {
             _.fromPairs(
               listOfCodes.map(code => [
                 code,
-                _.toPairs(this.icpc2).find(([k, v]) => k === code.substr(0, 1).toUpperCase())
+                _.toPairs(this.icpc2).find(([k]) => k === code.substr(0, 1).toUpperCase())
               ])
             ),
             (acc: any, pairOfRangeAndIcdInfo, code) => {
@@ -88,11 +90,13 @@ export class IccCodeXApi extends iccCodeApi {
     )
   }
 
+  // noinspection JSUnusedGlobalSymbols
   languageForType(type: string, lng: string) {
     const availableLanguages = this.codeLanguages[type]
     return availableLanguages && availableLanguages.indexOf(lng) >= 0 ? lng : "fr"
   }
 
+  // noinspection JSMethodCanBeStatic, JSUnusedGlobalSymbols
   normalize(c: CodeDto | string) {
     return c instanceof String
       ? {

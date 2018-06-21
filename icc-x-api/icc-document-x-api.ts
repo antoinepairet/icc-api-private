@@ -7,8 +7,8 @@ import * as models from "../icc-api/model/models"
 
 import { utils } from "./crypto/utils"
 import { AES } from "./crypto/AES"
-import { RSA } from "./crypto/RSA"
 
+// noinspection JSUnusedGlobalSymbols
 export class IccDocumentXApi extends iccDocumentApi {
   crypto: IccCryptoXApi
 
@@ -451,6 +451,7 @@ export class IccDocumentXApi extends iccDocumentApi {
     this.crypto = crypto
   }
 
+  // noinspection JSUnusedGlobalSymbols
   newInstance(user: models.UserDto, patient: models.PatientDto, c: any) {
     const document = _.extend(
       {
@@ -516,6 +517,7 @@ export class IccDocumentXApi extends iccDocumentApi {
           .then(initData => _.extend(document, { delegations: initData.delegations }))
   }
 
+  // noinspection JSUnusedLocalSymbols
   findByHCPartyPatientSecretFKeys(
     hcpartyId: string,
     secretForeignKeys: string
@@ -525,6 +527,7 @@ export class IccDocumentXApi extends iccDocumentApi {
     })
   }
 
+  // noinspection JSUnusedGlobalSymbols
   /**
    * 1. Check whether there is a delegation with 'hcpartyId' or not.
    * 2. 'fetchHcParty[hcpartyId][1]': is encrypted AES exchange key by RSA public key of him.
@@ -537,7 +540,7 @@ export class IccDocumentXApi extends iccDocumentApi {
    *
    * After these painful steps, you have the contacts of the patient.
    *
-   * @param hcparty
+   * @param hcpartyId
    * @param patient (Promise)
    */
   findByPatient(hcpartyId: string, patient: models.PatientDto) {
@@ -552,6 +555,7 @@ export class IccDocumentXApi extends iccDocumentApi {
       })
   }
 
+  // noinspection JSUnusedGlobalSymbols
   findByMessage(hcpartyId: string, message: models.MessageDto) {
     return this.crypto
       .extractDelegationsSFKs(message, hcpartyId)
@@ -625,6 +629,7 @@ export class IccDocumentXApi extends iccDocumentApi {
     })
   }
 
+  // noinspection JSUnusedGlobalSymbols
   getAttachmentUrl(
     documentId: string,
     attachmentId: string,
@@ -639,10 +644,12 @@ export class IccDocumentXApi extends iccDocumentApi {
     )
   }
 
+  // noinspection JSUnusedGlobalSymbols
   uti(mimeType: string) {
     return this.utiDefs[mimeType]
   }
 
+  // noinspection JSUnusedGlobalSymbols
   mimeType(uti: string) {
     return this.utiRevDefs[uti]
   }

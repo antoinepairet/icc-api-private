@@ -7,8 +7,8 @@ import * as models from "../icc-api/model/models"
 
 import { utils } from "./crypto/utils"
 import { AES } from "./crypto/AES"
-import { RSA } from "./crypto/RSA"
 
+// noinspection JSUnusedGlobalSymbols
 export class IccFormXApi extends iccFormApi {
   crypto: IccCryptoXApi
 
@@ -17,6 +17,7 @@ export class IccFormXApi extends iccFormApi {
     this.crypto = crypto
   }
 
+  // noinspection JSUnusedGlobalSymbols
   newInstance(user: models.UserDto, patient: models.PatientDto, c: any) {
     const form = _.extend(
       {
@@ -76,6 +77,7 @@ export class IccFormXApi extends iccFormApi {
       })
   }
 
+  // noinspection JSUnusedGlobalSymbols
   /**
    * 1. Check whether there is a delegation with 'hcpartyId' or not.
    * 2. 'fetchHcParty[hcpartyId][1]': is encrypted AES exchange key by RSA public key of him.
@@ -88,7 +90,7 @@ export class IccFormXApi extends iccFormApi {
    *
    * After these painful steps, you have the contacts of the patient.
    *
-   * @param hcparty
+   * @param hcpartyId
    * @param patient (Promise)
    */
   findBy(hcpartyId: string, patient: models.PatientDto) {
