@@ -33,21 +33,20 @@ export class AESUtils {
    * @returns {Promise} will be ArrayBuffer
    */
   decrypt(cryptoKey: CryptoKey, encryptedData: ArrayBuffer | Uint8Array) {
-    return new Promise(
-      (resolve: (value: ArrayBuffer | null) => any, reject: (reason: any) => any) => {
-        if (!cryptoKey) {
-          resolve(null)
-        }
-        if (encryptedData instanceof ArrayBuffer) {
-          var encryptedDataUnit8 = new Uint8Array(encryptedData)
-        } else {
-          var encryptedDataUnit8 = encryptedData
-        }
-        var aesAlgorithmEncrypt = {
-          name: this.aesAlgorithmEncrypt.name,
-          iv: encryptedDataUnit8.subarray(0, this.ivLength)
+    return new Promise((resolve: (value: ArrayBuffer) => any, reject: (reason: any) => any) => {
+      if (!cryptoKey) {
+        reject("No crypto key provided for decryption")
+      }
+      if (encryptedData instanceof ArrayBuffer) {
+        var encryptedDataUnit8 = new Uint8Array(encryptedData)
+      } else {
+        var encryptedDataUnit8 = encryptedData
+      }
+      var aesAlgorithmEncrypt = {
+        name: this.aesAlgorithmEncrypt.name,
+        iv: encryptedDataUnit8.subarray(0, this.ivLength)
 
-          /*
+        /*
     * IF THIS BIT OF CODE PRODUCES A DOMEXCEPTION CODE 0 ERROR, IT MIGHT BE RELATED TO THIS:
     *
     * NOTOK:
@@ -63,16 +62,15 @@ export class AESUtils {
     * }
     * var delegateHcPartyKey = hcparty.hcPartyKeys[delegatorId][1];
     */
-        }
-        window.crypto.subtle
-          .decrypt(
-            aesAlgorithmEncrypt,
-            cryptoKey,
-            encryptedDataUnit8.subarray(this.ivLength, encryptedDataUnit8.length)
-          )
-          .then(resolve, err => reject("AES decryption failed: " + err))
       }
-    )
+      window.crypto.subtle
+        .decrypt(
+          aesAlgorithmEncrypt,
+          cryptoKey,
+          encryptedDataUnit8.subarray(this.ivLength, encryptedDataUnit8.length)
+        )
+        .then(resolve, err => reject("AES decryption failed: " + err))
+    })
   }
 
   // generate an AES key

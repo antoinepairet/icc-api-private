@@ -44,7 +44,7 @@ export class IccHelementXApi extends iccHelementApi {
           helement,
           patient,
           user.healthcarePartyId!,
-          secretForeignKeys[0].delegatorId
+          secretForeignKeys[0]
         )
       )
       .then(initData => {
@@ -125,7 +125,7 @@ export class IccHelementXApi extends iccHelementApi {
 
           return this.crypto
             .decryptDelegationsSFKs(patient.delegations![hcpartyId], collatedAesKeys, patient.id!)
-            .then((secretForeignKeys: Array<{ delegatorId: string; key: CryptoKey }>) =>
+            .then((secretForeignKeys: Array<string>) =>
               this.findByHCPartyPatientSecretFKeys(hcpartyId, secretForeignKeys.join(","))
             )
             .then((helements: Array<models.HealthElementDto>) => this.decrypt(hcpartyId, helements))
@@ -166,9 +166,9 @@ export class IccHelementXApi extends iccHelementApi {
               )
               return this.crypto
                 .decryptDelegationsSFKs(he.delegations![hcpartyId], collatedAesKeys, he.id!)
-                .then((sfks: Array<{ delegatorId: string; key: CryptoKey }>) => {
+                .then((sfks: Array<string>) => {
                   if (he.encryptedSelf) {
-                    return AES.importKey("raw", utils.hex2ua(sfks[0].delegatorId.replace(/-/g, "")))
+                    return AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, "")))
                       .then(
                         key =>
                           new Promise((resolve: (value: any) => any) =>
