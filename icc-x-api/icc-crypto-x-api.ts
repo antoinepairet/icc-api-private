@@ -24,9 +24,13 @@ export class IccCryptoXApi {
   }
 
   randomUuid() {
-    let temp: any = window.crypto.getRandomValues(new Uint8Array(1))!
-    return ((1e7).toString() + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
-      (Number(c) ^ (temp[0] & (15 >> (Number(c) / 4)))).toString(16)
+    return ((1e7).toString() + -1e3 + -4e3 + -8e3 + -1e11).replace(
+      /[018]/g,
+      c =>
+        (
+          Number(c) ^
+          (window.crypto.getRandomValues(new Uint8Array(1))![0] & (15 >> (Number(c) / 4)))
+        ).toString(16) //Keep that inlined or you will loose the random
     )
   }
 
@@ -149,7 +153,7 @@ export class IccCryptoXApi {
               {
                 owner: ownerId,
                 delegatedTo: ownerId,
-                key: this.utils.ua2hex(encryptedDelegationAndSecretForeignKey[0])
+                key: this.utils.ua2hex(encryptedDelegationAndSecretForeignKey[0]!)
               }
             ]
           ]
@@ -209,7 +213,7 @@ export class IccCryptoXApi {
                 {
                   owner: ownerId,
                   delegatedTo: delegateId,
-                  key: this.utils.ua2hex(encryptedDelegationAndSecretForeignKey[0])
+                  key: this.utils.ua2hex(encryptedDelegationAndSecretForeignKey[0]!)
                 }
               ])
             ]
