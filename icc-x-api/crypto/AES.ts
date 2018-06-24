@@ -20,7 +20,7 @@ export class AESUtils {
         .encrypt(aesAlgorithmEncrypt, cryptoKey, plainData)
         .then(
           cipherData =>
-            resolve(utils.appendBuffer(aesAlgorithmEncrypt.iv.buffer as ArrayBuffer, cipherData)),
+            resolve(utils.appendBuffer(!aesAlgorithmEncrypt.iv.buffer as ArrayBuffer, cipherData)),
           err => reject("AES encryption failed: " + err)
         )
     })
