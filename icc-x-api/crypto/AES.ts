@@ -3,9 +3,8 @@ import { utils } from "./utils"
 export class AESUtils {
   /********* AES Config **********/
   ivLength = 16
-  aesAlgorithmEncrypt: any = {
-    name: "AES-CBC"
-  }
+  aesAlgorithmEncryptName = "AES-CBC"
+
   aesKeyGenParams = {
     name: "AES-CBC",
     length: 256
@@ -13,14 +12,15 @@ export class AESUtils {
 
   encrypt(cryptoKey: CryptoKey, plainData: ArrayBuffer) {
     return new Promise((resolve: (value: ArrayBuffer) => any, reject: (reason: any) => any) => {
-      var aesAlgorithmEncrypt = {
-        name: this.aesAlgorithmEncrypt.name,
+      const aesAlgorithmEncrypt = {
+        name: this.aesAlgorithmEncryptName,
         iv: this.generateIV(this.ivLength)
       }
       window.crypto.subtle
         .encrypt(aesAlgorithmEncrypt, cryptoKey, plainData)
         .then(
-          cipherData => resolve(utils.appendBuffer(this.aesAlgorithmEncrypt.iv, cipherData)),
+          cipherData =>
+            resolve(utils.appendBuffer(aesAlgorithmEncrypt.iv.buffer as ArrayBuffer, cipherData)),
           err => reject("AES encryption failed: " + err)
         )
     })
@@ -42,8 +42,8 @@ export class AESUtils {
       } else {
         var encryptedDataUnit8 = encryptedData
       }
-      var aesAlgorithmEncrypt = {
-        name: this.aesAlgorithmEncrypt.name,
+      const aesAlgorithmEncrypt = {
+        name: this.aesAlgorithmEncryptName,
         iv: encryptedDataUnit8.subarray(0, this.ivLength)
 
         /*
