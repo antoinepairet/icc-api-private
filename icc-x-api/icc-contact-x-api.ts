@@ -1,7 +1,7 @@
 import { iccContactApi } from "../icc-api/iccApi"
 import { IccCryptoXApi } from "../icc-x-api/icc-crypto-x-api"
 
-import * as i18n from "./rsrc/contact.i18n"
+import i18n from "./rsrc/contact.i18n"
 import { utils } from "./crypto/utils"
 import { AES } from "./crypto/AES"
 import { RSA } from "./crypto/RSA"
