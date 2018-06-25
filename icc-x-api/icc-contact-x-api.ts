@@ -406,7 +406,7 @@ export class IccContactXApi extends iccContactApi {
         //Create or assign subcontacts for all pairs he/poa (can be null/null)
         let sc = ctc.subContacts!.find(
           sc =>
-            (formId === undefined || sc.formId === formId) &&
+            (formId == undefined || sc.formId === formId) &&
             sc.planOfActionId === poaId &&
             sc.healthElementId === heId
         )
@@ -437,7 +437,7 @@ export class IccContactXApi extends iccContactApi {
           )
         }
         if (!sc.services!.some(s => s.serviceId === svc.id)) {
-          sc.services!.push({ serviceId: svc.id })
+          sc.services!.push({ serviceId: svc.id! })
         }
       })
     })

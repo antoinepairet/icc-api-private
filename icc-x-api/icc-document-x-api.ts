@@ -471,46 +471,15 @@ export class IccDocumentXApi extends iccDocumentApi {
       ? this.crypto
           .extractDelegationsSFKs(patient, user.healthcarePartyId!)
           .then(secretForeignKeys =>
-            this.crypto.initObjectDelegations(
+            this.initDelegations(
               document,
               patient,
-              user.healthcarePartyId!,
+              user,
               secretForeignKeys[0]
             )
           )
           .then(initData => {
-            _.extend(document, {
-              delegations: initData.delegations,
-              cryptedForeignKeys: initData.cryptedForeignKeys,
-              secretForeignKeys: initData.secretForeignKeys
-            })
-
-            let promise = Promise.resolve(document)
-            ;(user.autoDelegations
-              ? (user.autoDelegations.all || []).concat(
-                  user.autoDelegations.medicalInformation || []
-                )
-              : []
-            ).forEach(
-              delegateId =>
-                (promise = promise
-                  .then(document =>
-                    this.crypto.appendObjectDelegations(
-                      document,
-                      patient,
-                      user.healthcarePartyId!,
-                      delegateId,
-                      initData.secretId
-                    )
-                  )
-                  .then(extraData =>
-                    _.extend(document, {
-                      delegations: extraData.delegations,
-                      cryptedForeignKeys: extraData.cryptedForeignKeys
-                    })
-                  ))
-            )
-            return promise
+            return initData
           })
       : this.crypto
           .initObjectDelegations(document, null, user.healthcarePartyId!, null)
