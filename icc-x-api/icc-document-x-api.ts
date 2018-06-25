@@ -475,7 +475,7 @@ export class IccDocumentXApi extends iccDocumentApi {
               document,
               patient,
               user.healthcarePartyId!,
-              secretForeignKeys[0].delegatorId
+              secretForeignKeys[0]
             )
           )
           .then(initData => {
@@ -617,12 +617,9 @@ export class IccDocumentXApi extends iccDocumentApi {
                   collatedAesKeys,
                   document.id!
                 )
-                .then((sfks: Array<{ delegatorId: string; key: CryptoKey }>) => {
+                .then((sfks: Array<string>) => {
                   if (sfks.length && document.encryptedSelf) {
-                    return this.crypto.AES.importKey(
-                      "raw",
-                      utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ""))
-                    )
+                    return this.crypto.AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, "")))
                       .then(
                         (key: CryptoKey) =>
                           new Promise((resolve: (value: ArrayBuffer | null) => any) => {
@@ -644,9 +641,6 @@ export class IccDocumentXApi extends iccDocumentApi {
                   } else {
                     return Promise.resolve(document)
                   }
-                })
-                .catch(function(e: Error) {
-                  console.log(e)
                 })
             }
           )

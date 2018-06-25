@@ -1,7 +1,7 @@
 import { iccContactApi } from "../icc-api/iccApi"
 import { IccCryptoXApi } from "../icc-x-api/icc-crypto-x-api"
 
-import * as i18n from "./rsrc/contact.i18n"
+import i18n from "./rsrc/contact.i18n"
 import { utils } from "./crypto/utils"
 import { AES } from "./crypto/AES"
 import { RSA } from "./crypto/RSA"
@@ -46,7 +46,7 @@ export class IccContactXApi extends iccContactApi {
           contact,
           patient,
           user.healthcarePartyId!,
-          secretForeignKeys[0].delegatorId
+          secretForeignKeys[0]
         )
       )
       .then(initData => {
@@ -128,14 +128,11 @@ export class IccContactXApi extends iccContactApi {
               )
               return this.crypto
                 .decryptDelegationsSFKs(ctc.delegations![hcpartyId], collatedAesKeys, ctc.id!)
-                .then((sfks: Array<{ delegatorId: string; key: CryptoKey }>) => {
+                .then((sfks: Array<string>) => {
                   return Promise.all(
                     ctc.services!.map(svc => {
                       if (svc.encryptedContent || svc.encryptedSelf) {
-                        return AES.importKey(
-                          "raw",
-                          utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ""))
-                        )
+                        return AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, "")))
                           .then(
                             (key: CryptoKey) =>
                               new Promise((resolve: (value: any) => any) => {
@@ -180,10 +177,7 @@ export class IccContactXApi extends iccContactApi {
                       ctc.services = svcs
                       //console.log('ES:'+ctc.encryptedSelf)
                       return ctc.encryptedSelf
-                        ? AES.importKey(
-                            "raw",
-                            utils.hex2ua(sfks[0].delegatorId.replace(/-/g, ""))
-                          ).then(
+                        ? AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, ""))).then(
                             key =>
                               new Promise((resolve: (value: any) => any) => {
                                 AES.decrypt(key, utils.text2ua(atob(ctc.encryptedSelf!))).then(

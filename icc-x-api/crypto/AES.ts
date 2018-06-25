@@ -3,9 +3,8 @@ import { utils } from "./utils"
 export class AESUtils {
   /********* AES Config **********/
   ivLength = 16
-  aesAlgorithmEncrypt: any = {
-    name: "AES-CBC"
-  }
+  aesAlgorithmEncryptName = "AES-CBC"
+
   aesKeyGenParams = {
     name: "AES-CBC",
     length: 256
@@ -13,14 +12,15 @@ export class AESUtils {
 
   encrypt(cryptoKey: CryptoKey, plainData: ArrayBuffer) {
     return new Promise((resolve: (value: ArrayBuffer) => any, reject: (reason: any) => any) => {
-      var aesAlgorithmEncrypt = {
-        name: this.aesAlgorithmEncrypt.name,
+      const aesAlgorithmEncrypt = {
+        name: this.aesAlgorithmEncryptName,
         iv: this.generateIV(this.ivLength)
       }
       window.crypto.subtle
         .encrypt(aesAlgorithmEncrypt, cryptoKey, plainData)
         .then(
-          cipherData => resolve(utils.appendBuffer(this.aesAlgorithmEncrypt.iv, cipherData)),
+          cipherData =>
+            resolve(utils.appendBuffer(aesAlgorithmEncrypt.iv.buffer! as ArrayBuffer, cipherData)),
           err => reject("AES encryption failed: " + err)
         )
     })
@@ -33,21 +33,20 @@ export class AESUtils {
    * @returns {Promise} will be ArrayBuffer
    */
   decrypt(cryptoKey: CryptoKey, encryptedData: ArrayBuffer | Uint8Array) {
-    return new Promise(
-      (resolve: (value: ArrayBuffer | null) => any, reject: (reason: any) => any) => {
-        if (!cryptoKey) {
-          resolve(null)
-        }
-        if (encryptedData instanceof ArrayBuffer) {
-          var encryptedDataUnit8 = new Uint8Array(encryptedData)
-        } else {
-          var encryptedDataUnit8 = encryptedData
-        }
-        var aesAlgorithmEncrypt = {
-          name: this.aesAlgorithmEncrypt.name,
-          iv: encryptedDataUnit8.subarray(0, this.ivLength)
+    return new Promise((resolve: (value: ArrayBuffer) => any, reject: (reason: any) => any) => {
+      if (!cryptoKey) {
+        reject("No crypto key provided for decryption")
+      }
+      if (encryptedData instanceof ArrayBuffer) {
+        var encryptedDataUnit8 = new Uint8Array(encryptedData)
+      } else {
+        var encryptedDataUnit8 = encryptedData
+      }
+      const aesAlgorithmEncrypt = {
+        name: this.aesAlgorithmEncryptName,
+        iv: encryptedDataUnit8.subarray(0, this.ivLength)
 
-          /*
+        /*
     * IF THIS BIT OF CODE PRODUCES A DOMEXCEPTION CODE 0 ERROR, IT MIGHT BE RELATED TO THIS:
     *
     * NOTOK:
@@ -63,16 +62,15 @@ export class AESUtils {
     * }
     * var delegateHcPartyKey = hcparty.hcPartyKeys[delegatorId][1];
     */
-        }
-        window.crypto.subtle
-          .decrypt(
-            aesAlgorithmEncrypt,
-            cryptoKey,
-            encryptedDataUnit8.subarray(this.ivLength, encryptedDataUnit8.length)
-          )
-          .then(resolve, err => reject("AES decryption failed: " + err))
       }
-    )
+      window.crypto.subtle
+        .decrypt(
+          aesAlgorithmEncrypt,
+          cryptoKey,
+          encryptedDataUnit8.subarray(this.ivLength, encryptedDataUnit8.length)
+        )
+        .then(resolve, err => reject("AES decryption failed: " + err))
+    })
   }
 
   // generate an AES key

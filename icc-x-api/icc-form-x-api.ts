@@ -40,7 +40,7 @@ export class IccFormXApi extends iccFormApi {
           form,
           patient,
           user.healthcarePartyId!,
-          secretForeignKeys[0].delegatorId
+          secretForeignKeys[0]
         )
       )
       .then(initData => {
@@ -123,9 +123,9 @@ export class IccFormXApi extends iccFormApi {
               )
               return this.crypto
                 .decryptDelegationsSFKs(form.delegations![hcpartyId], collatedAesKeys, form.id!)
-                .then((sfks: Array<{ delegatorId: string; key: CryptoKey }>) => {
+                .then((sfks: Array<string>) => {
                   if (form.encryptedSelf) {
-                    return AES.importKey("raw", utils.hex2ua(sfks[0].delegatorId.replace(/-/g, "")))
+                    return AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, "")))
                       .then(
                         key =>
                           new Promise((resolve: (value: any) => any) => {

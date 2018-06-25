@@ -1,8 +1,8 @@
 import { iccCodeApi } from "../icc-api/iccApi"
 
-import * as codeLanguages from "./rsrc/codelng"
-import * as icd10 from "./rsrc/icd10"
-import * as icpc2 from "./rsrc/icpc2"
+import codeLanguages from "./rsrc/codelng"
+import icd10 from "./rsrc/icd10"
+import icpc2 from "./rsrc/icpc2"
 
 import * as _ from "lodash"
 import { XHR } from "../icc-api/api/XHR"
