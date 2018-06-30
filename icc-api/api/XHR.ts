@@ -17,6 +17,7 @@ export namespace XHR {
     status: number
     statusText: string
     contentType: string
+    documentContent: Document | null
 
     constructor(jsXHR: XMLHttpRequest) {
       this.headers = jsXHR
@@ -43,6 +44,7 @@ export namespace XHR {
           }
         }
       })
+      this.documentContent = jsXHR.responseXML
       this.text = jsXHR.responseText
       this.type = jsXHR.responseType
       this.status = jsXHR.status
