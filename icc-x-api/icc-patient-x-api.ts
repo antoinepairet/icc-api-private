@@ -39,9 +39,9 @@ export class IccPatientXApi extends iccPatientApi {
     secretForeignKey?: string
   ): Promise<models.PatientDto> {
     return this.crypto
-      .initObjectDelegations(patient, parentObject, user.healthcarePartyId!, secretForeignKey)
+      .initObjectDelegations(patient, parentObject, user.healthcarePartyId!, secretForeignKey!)
       .then(initData => {
-        _.extend(patient, {delegations: initData.delegations})
+        _.extend(patient, { delegations: initData.delegations })
 
         let promise = Promise.resolve(patient)
         ;(user.autoDelegations
@@ -59,10 +59,9 @@ export class IccPatientXApi extends iccPatientApi {
                   initData.secretId
                 )
               )
-              .then(extraData => _.extend(patient, {delegations: extraData.delegations})))
+              .then(extraData => _.extend(patient, { delegations: extraData.delegations })))
         )
         return promise
       })
   }
 }
-
