@@ -54,6 +54,8 @@ export class PatientDto {
 
   delegations?: { [key: string]: Array<models.DelegationDto> }
 
+  encryptionKeys?: { [key: string]: Array<models.DelegationDto> }
+
   mergeToPatientId?: string
 
   mergedIds?: Array<string>

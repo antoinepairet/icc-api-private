@@ -54,6 +54,8 @@ export class HealthElementDto {
 
   delegations?: { [key: string]: Array<models.DelegationDto> }
 
+  encryptionKeys?: { [key: string]: Array<models.DelegationDto> }
+
   healthElementId?: string
 
   descr?: string

@@ -54,6 +54,8 @@ export class InvoiceDto {
 
   delegations?: { [key: string]: Array<models.DelegationDto> }
 
+  encryptionKeys?: { [key: string]: Array<models.DelegationDto> }
+
   invoiceDate?: number
 
   sentDate?: number
