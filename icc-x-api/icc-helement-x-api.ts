@@ -168,24 +168,31 @@ export class IccHelementXApi extends iccHelementApi {
                 .decryptDelegationsSFKs(he.delegations![hcpartyId], collatedAesKeys, he.id!)
                 .then((sfks: Array<string>) => {
                   if (he.encryptedSelf) {
-                    return AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, "")))
-                      .then(
-                        key =>
-                          new Promise((resolve: (value: any) => any) =>
-                            AES.decrypt(key, utils.text2ua(atob(he.encryptedSelf!)))
-                              .then(resolve)
-                              .catch((err: Error) => {
-                                console.log("Error, could not decrypt helement: " + err, he.id)
-                                resolve(null)
-                              })
+                    return AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, ""))).then(
+                      key =>
+                        new Promise((resolve: (value: any) => any) =>
+                          AES.decrypt(key, utils.text2ua(atob(he.encryptedSelf!))).then(
+                            dec => {
+                              let jsonContent
+                              try {
+                                jsonContent = dec && utils.ua2utf8(dec)
+                                jsonContent && _.assign(he, JSON.parse(jsonContent))
+                              } catch (e) {
+                                console.log(
+                                  "Cannot parse he",
+                                  he.id,
+                                  jsonContent || "<- Invalid encoding"
+                                )
+                              }
+                              resolve(he)
+                            },
+                            () => {
+                              console.log("Cannot decrypt contact", he.id)
+                              resolve(he)
+                            }
                           )
-                      )
-                      .then(decrypted => {
-                        if (decrypted) {
-                          he.descr = decrypted
-                        }
-                        return he
-                      })
+                        )
+                    )
                   } else {
                     return Promise.resolve(he)
                   }

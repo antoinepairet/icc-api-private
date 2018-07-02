@@ -54,6 +54,8 @@ export class ContactDto {
 
   delegations?: { [key: string]: Array<models.DelegationDto> }
 
+  encryptionKeys?: { [key: string]: Array<models.DelegationDto> }
+
   groupId?: string
 
   openingDate?: number

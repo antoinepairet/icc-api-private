@@ -240,6 +240,83 @@ export class IccCryptoXApi {
       }))
   }
 
+  initEncryptionKeys(
+    createdObject: any,
+    ownerId: string
+  ): Promise<{
+    encryptionKeys: any
+    secretId: string
+  }> {
+    const secretId = this.randomUuid()
+    return this.hcpartyBaseApi
+      .getHealthcareParty(ownerId)
+      .then(owner => owner.hcPartyKeys[ownerId][0])
+      .then(encryptedHcPartyKey =>
+        this.decryptHcPartyKey(ownerId, ownerId, encryptedHcPartyKey, true)
+      )
+      .then(importedAESHcPartyKey =>
+        this.AES.encrypt(
+          importedAESHcPartyKey.key,
+          utils.text2ua(createdObject.id + ":" + secretId)
+        )
+      )
+      .then(encryptedEncryptionKeys => ({
+        encryptionKeys: _.fromPairs([
+          [
+            ownerId,
+            [
+              {
+                owner: ownerId,
+                delegatedTo: ownerId,
+                key: this.utils.ua2hex(encryptedEncryptionKeys)
+              }
+            ]
+          ]
+        ]),
+        secretId: secretId
+      }))
+  }
+
+  appendEncryptionKeys(
+    modifiedObject: any,
+    ownerId: string,
+    secretIdOfModifiedObject: string
+  ): Promise<{
+    encryptionKeys: any
+    secretId: string
+  }> {
+    return this.hcpartyBaseApi
+      .getHealthcareParty(ownerId)
+      .then(owner => owner.hcPartyKeys[ownerId][0])
+      .then(encryptedHcPartyKey =>
+        this.decryptHcPartyKey(ownerId, ownerId, encryptedHcPartyKey, true)
+      )
+      .then(importedAESHcPartyKey =>
+        this.AES.encrypt(
+          importedAESHcPartyKey.key,
+          utils.text2ua(modifiedObject.id + ":" + secretIdOfModifiedObject)
+        )
+      )
+      .then(encryptedEncryptionKeys => ({
+        encryptionKeys: _.extend(
+          _.cloneDeep(modifiedObject.encryptionKeys),
+          _.fromPairs([
+            [
+              ownerId,
+              [
+                {
+                  owner: ownerId,
+                  delegatedTo: ownerId,
+                  key: this.utils.ua2hex(encryptedEncryptionKeys)
+                }
+              ]
+            ]
+          ])
+        ),
+        secretId: secretIdOfModifiedObject
+      }))
+  }
+
   extractDelegationsSFKs(
     document: models.PatientDto | models.MessageDto,
     hcpartyId: string
