@@ -24,9 +24,9 @@
 
 import * as models from "./models"
 
-export class UserStubDto {
+export class IcureStubDto {
   constructor(json: JSON | any) {
-    Object.assign(this as UserStubDto, json)
+    Object.assign(this as IcureStubDto, json)
   }
   id?: string
 
@@ -34,22 +34,25 @@ export class UserStubDto {
 
   deletionDate?: number
 
-  name?: string
+  created?: number
 
-  healthcarePartyId?: string
+  modified?: number
 
-  email?: string
+  endOfLife?: number
 
-  autoDelegations?: { [key: string]: Array<string> }
+  author?: string
 
-  virtualHostDependency?: UserStubDto.VirtualHostDependencyEnum
+  responsible?: string
 
-  virtualHosts?: Array<string>
-}
-export namespace UserStubDto {
-  export enum VirtualHostDependencyEnum {
-    NONE = <any>"NONE",
-    DIRECT = <any>"DIRECT",
-    FULL = <any>"FULL"
-  }
+  codes?: Array<models.CodeDto>
+
+  tags?: Array<models.CodeDto>
+
+  secretForeignKeys?: Array<string>
+
+  cryptedForeignKeys?: { [key: string]: Array<models.DelegationDto> }
+
+  delegations?: { [key: string]: Array<models.DelegationDto> }
+
+  encryptionKeys?: { [key: string]: Array<models.DelegationDto> }
 }

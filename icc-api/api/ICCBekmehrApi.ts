@@ -167,7 +167,7 @@ export class iccBekmehrApi {
       "/be_kmehr/smf/{documentId}/import".replace("{documentId}", documentId + "") +
       "?ts=" +
       new Date().getTime() +
-      (documentKey ? "&documentKet=" + documentKey : "") +
+      (documentKey ? "&documentKey=" + documentKey : "") +
       (patientId ? "&patientId=" + patientId : "") +
       (language ? "&language=" + language : "")
 

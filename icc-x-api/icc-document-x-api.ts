@@ -471,12 +471,7 @@ export class IccDocumentXApi extends iccDocumentApi {
       ? this.crypto
           .extractDelegationsSFKs(patient, user.healthcarePartyId!)
           .then(secretForeignKeys =>
-            this.initDelegations(
-              document,
-              patient,
-              user,
-              secretForeignKeys[0]
-            )
+            this.initDelegations(document, patient, user, secretForeignKeys[0])
           )
           .then(initData => {
             return initData
@@ -486,15 +481,21 @@ export class IccDocumentXApi extends iccDocumentApi {
           .then(initData => _.extend(document, { delegations: initData.delegations }))
   }
 
-  initDelegations(patient: models.PatientDto, parentObject: any, user: models.UserDto, secretForeignKey: string): Promise<models.PatientDto>{
-    return this.crypto.initObjectDelegations(patient, parentObject, user.healthcarePartyId!, secretForeignKey)
+  initDelegations(
+    patient: models.PatientDto,
+    parentObject: any,
+    user: models.UserDto,
+    secretForeignKey: string
+  ): Promise<models.PatientDto> {
+    return this.crypto
+      .initObjectDelegations(patient, parentObject, user.healthcarePartyId!, secretForeignKey)
       .then(initData => {
         _.extend(patient, { delegations: initData.delegations })
 
         let promise = Promise.resolve(patient)
         ;(user.autoDelegations
-            ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || [])
-            : []
+          ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || [])
+          : []
         ).forEach(
           delegateId =>
             (promise = promise
