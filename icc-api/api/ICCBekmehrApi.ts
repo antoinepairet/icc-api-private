@@ -158,7 +158,7 @@ export class iccBekmehrApi {
     patientId?: string,
     language?: string,
     body?: any
-  ): Promise<any | Boolean> {
+  ): Promise<Array<models.ImportResultDto> | any> {
     let _body = null
     _body = body
 
@@ -172,7 +172,7 @@ export class iccBekmehrApi {
       (language ? "&language=" + language : "")
 
     return XHR.sendCommand("POST", _url, this.headers, _body)
-      .then(doc => (doc.contentType.startsWith("application/octet-stream") ? doc.body : true))
+      .then(doc => (doc.body as Array<JSON>).map(it => new models.ImportResultDto(it)))
       .catch(err => this.handleError(err))
   }
   isSumehrValid(

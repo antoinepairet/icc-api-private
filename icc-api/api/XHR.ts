@@ -33,7 +33,7 @@ export namespace XHR {
             this.body = JSON.parse(jsXHR.response)
           } else if (head.data.startsWith("application/octet-stream")) {
             try {
-              this.body = JSON.parse(jsXHR.response)
+              this.body = JSON.parse(jsXHR.response.toString())
               console.log("parse done")
             } catch (e) {
               console.log("parse fail")
