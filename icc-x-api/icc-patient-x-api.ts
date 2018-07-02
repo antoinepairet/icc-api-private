@@ -39,7 +39,16 @@ export class IccPatientXApi extends iccPatientApi {
     secretForeignKey?: string
   ): Promise<models.PatientDto> {
     return this.crypto
+<<<<<<< HEAD
       .initObjectDelegations(patient, parentObject, user.healthcarePartyId!, secretForeignKey!)
+=======
+      .initObjectDelegations(
+        patient,
+        parentObject,
+        user.healthcarePartyId!,
+        secretForeignKey || null
+      )
+>>>>>>> 5b5ba419ecd2efddc0eca8f14ae827738fa9a207
       .then(initData => {
         _.extend(patient, { delegations: initData.delegations })
 
