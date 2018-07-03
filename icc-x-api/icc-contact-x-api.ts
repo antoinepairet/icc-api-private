@@ -10,6 +10,7 @@ import moment from "moment"
 import * as _ from "lodash"
 import * as models from "../icc-api/model/models"
 import { XHR } from "../icc-api/api/XHR"
+import { ContactDto } from "../icc-api/model/models"
 
 export class IccContactXApi extends iccContactApi {
   i18n: any = i18n
@@ -20,7 +21,11 @@ export class IccContactXApi extends iccContactApi {
     this.crypto = crypto
   }
 
-  newInstance(user: models.UserDto, patient: models.PatientDto, c: any) {
+  newInstance(
+    user: models.UserDto,
+    patient: models.PatientDto,
+    c: any
+  ): Promise<models.ContactDto> {
     const contact = new models.ContactDto(
       _.extend(
         {
@@ -48,7 +53,7 @@ export class IccContactXApi extends iccContactApi {
     user: models.UserDto,
     patient: models.PatientDto,
     contact: models.ContactDto
-  ) {
+  ): Promise<models.ContactDto> {
     return this.crypto
       .extractDelegationsSFKs(patient, user.healthcarePartyId!)
       .then(secretForeignKeys =>
