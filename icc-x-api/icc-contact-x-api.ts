@@ -95,6 +95,39 @@ export class IccContactXApi extends iccContactApi {
       })
   }
 
+  initDelegations(
+    contact: models.ContactDto,
+    parentObject: any,
+    user: models.UserDto,
+    secretForeignKey: string
+  ): Promise<models.ContactDto> {
+    return this.crypto
+      .initObjectDelegations(contact, parentObject, user.healthcarePartyId!, secretForeignKey)
+      .then(initData => {
+        _.extend(contact, { delegations: initData.delegations })
+
+        let promise = Promise.resolve(contact)
+        ;(user.autoDelegations
+          ? (user.autoDelegations.all || []).concat(user.autoDelegations.medicalInformation || [])
+          : []
+        ).forEach(
+          delegateId =>
+            (promise = promise
+              .then(patient =>
+                this.crypto.appendObjectDelegations(
+                  patient,
+                  parentObject,
+                  user.healthcarePartyId!,
+                  delegateId,
+                  initData.secretId
+                )
+              )
+              .then(extraData => _.extend(contact, { delegations: extraData.delegations })))
+        )
+        return promise
+      })
+  }
+
   initEncryptionKeys(user: models.UserDto, ctc: models.ContactDto) {
     return this.crypto.initEncryptionKeys(ctc, user.healthcarePartyId!).then(eks => {
       let promise = Promise.resolve(ctc)
