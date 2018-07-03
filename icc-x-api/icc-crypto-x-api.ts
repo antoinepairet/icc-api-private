@@ -317,35 +317,80 @@ export class IccCryptoXApi {
       }))
   }
 
+  addDelegationsAndEncryptionKeys(
+    parent: models.PatientDto | models.MessageDto,
+    child: models.ContactDto | models.InvoiceDto | models.DocumentDto | models.HealthElementDto,
+    ownerId: string,
+    delegateId: string,
+    secretDelegationKey: string,
+    secretEncryptionKey: string
+  ) {
+    return Promise.all([
+      this.appendObjectDelegations(child, parent, ownerId, delegateId, secretDelegationKey),
+      this.appendEncryptionKeys(child, ownerId, secretEncryptionKey)
+    ]).then(extraData => {
+      const extraDels = extraData[0]
+      const extraEks = extraData[1]
+      return _.extend(child, {
+        delegations: extraDels.delegations,
+        cryptedForeignKeys: extraDels.cryptedForeignKeys,
+        encryptionKeys: extraEks.encryptionKeys
+      })
+    })
+  }
+
   extractDelegationsSFKs(
-    document: models.PatientDto | models.MessageDto,
+    document:
+      | models.PatientDto
+      | models.MessageDto
+      | models.ContactDto
+      | models.DocumentDto
+      | models.InvoiceDto
+      | models.HealthElementDto,
     hcpartyId: string
   ): Promise<Array<string>> {
-    if (
-      !document.delegations ||
-      !document.delegations[hcpartyId] ||
-      !(document.delegations[hcpartyId].length > 0)
-    ) {
+    const dels = document.delegations
+    if (!dels || !dels[hcpartyId] || dels[hcpartyId].length <= 0) {
       throw "There is not delegation for this healthcare party (" +
         hcpartyId +
         ") in document (" +
         document.id +
         ")"
     }
-    return this.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, document.delegations).then(
-      (
-        decryptedAndImportedAesHcPartyKeys: Array<{
-          delegatorId: string
-          key: CryptoKey
-        }>
-      ) => {
-        const collatedAesKeys: any = {}
+    return this.extractSfks(hcpartyId, document.id!, dels)
+  }
+
+  extractEncryptionsSKs(
+    document:
+      | models.PatientDto
+      | models.MessageDto
+      | models.ContactDto
+      | models.DocumentDto
+      | models.InvoiceDto
+      | models.HealthElementDto,
+    hcpartyId: string
+  ): Promise<Array<string>> {
+    const eks = document.encryptionKeys
+    if (!eks || !eks[hcpartyId] || eks[hcpartyId].length <= 0) {
+      throw "There is not delegation for this healthcare party (" +
+        hcpartyId +
+        ") in document (" +
+        document.id +
+        ")"
+    }
+    return this.extractSfks(hcpartyId, document.id!, eks)
+  }
+
+  extractSfks(
+    hcpartyId: string,
+    objectId: string,
+    delegations: { [key: string]: Array<models.DelegationDto> }
+  ): Promise<Array<string>> {
+    return this.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, delegations).then(
+      decryptedAndImportedAesHcPartyKeys => {
+        var collatedAesKeys: { [key: string]: CryptoKey } = {}
         decryptedAndImportedAesHcPartyKeys.forEach(k => (collatedAesKeys[k.delegatorId] = k.key))
-        return this.decryptDelegationsSFKs(
-          document.delegations![hcpartyId],
-          collatedAesKeys,
-          document.id!
-        )
+        return this.decryptDelegationsSFKs(delegations[hcpartyId], collatedAesKeys, objectId!)
       }
     )
   }

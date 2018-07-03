@@ -284,7 +284,7 @@ export class iccContactApi {
       .then(doc => new models.ContactDto(doc.body as JSON))
       .catch(err => this.handleError(err))
   }
-  setHealthElementsDelegations(body?: Array<models.IcureStubDto>): Promise<any | Boolean> {
+  setContactsDelegations(body?: Array<models.IcureStubDto>): Promise<any | Boolean> {
     let _body = null
     _body = body
 

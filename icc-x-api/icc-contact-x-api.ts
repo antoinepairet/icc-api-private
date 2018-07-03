@@ -84,7 +84,7 @@ export class IccContactXApi extends iccContactApi {
         ).forEach(
           delegateId =>
             (promise = promise.then(contact =>
-              this.addDelegationsAndEncryptionKeys(
+              this.crypto.addDelegationsAndEncryptionKeys(
                 patient,
                 contact,
                 user.healthcarePartyId!,
@@ -96,34 +96,6 @@ export class IccContactXApi extends iccContactApi {
         )
         return promise
       })
-  }
-
-  private addDelegationsAndEncryptionKeys(
-    patient: models.PatientDto,
-    contact: models.ContactDto,
-    ownerId: string,
-    delegateId: string,
-    secretDelegationKey: string,
-    secretEncryptionKey: string
-  ) {
-    return Promise.all([
-      this.crypto.appendObjectDelegations(
-        contact,
-        patient,
-        ownerId,
-        delegateId,
-        secretDelegationKey
-      ),
-      this.crypto.appendEncryptionKeys(contact, ownerId, secretEncryptionKey)
-    ]).then(extraData => {
-      const extraDels = extraData[0]
-      const extraEks = extraData[1]
-      return _.extend(contact, {
-        delegations: extraDels.delegations,
-        cryptedForeignKeys: extraDels.cryptedForeignKeys,
-        encryptionKeys: extraEks.encryptionKeys
-      })
-    })
   }
 
   initEncryptionKeys(user: models.UserDto, ctc: models.ContactDto) {
@@ -204,45 +176,39 @@ export class IccContactXApi extends iccContactApi {
           .then(ctc =>
             this.crypto.decryptAndImportAesHcPartyKeysInDelegations(hcpartyId, ctc.encryptionKeys!)
           )
-          .then(
-            (
-              decryptedAndImportedAesHcPartyKeys: Array<{
-                delegatorId: string
-                key: CryptoKey
-              }>
-            ) => {
-              var collatedAesKeys: { [key: string]: CryptoKey } = {}
-              decryptedAndImportedAesHcPartyKeys.forEach(
-                k => (collatedAesKeys[k.delegatorId] = k.key)
+          .then(decryptedAndImportedAesHcPartyKeys => {
+            var collatedAesKeys: { [key: string]: CryptoKey } = {}
+            decryptedAndImportedAesHcPartyKeys.forEach(
+              k => (collatedAesKeys[k.delegatorId] = k.key)
+            )
+            return this.crypto.decryptDelegationsSFKs(
+              ctc.encryptionKeys![hcpartyId],
+              collatedAesKeys,
+              ctc.id!
+            )
+          })
+          .then((sfks: Array<string>) =>
+            AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, "")))
+          )
+          .then((key: CryptoKey) =>
+            Promise.all(
+              ctc.services!.map(svc =>
+                AES.encrypt(key, utils.utf82ua(JSON.stringify({ content: svc.content })))
               )
-              return this.crypto
-                .decryptDelegationsSFKs(ctc.encryptionKeys![hcpartyId], collatedAesKeys, ctc.id!)
-                .then((sfks: Array<string>) =>
-                  AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, "")))
-                )
-                .then((key: CryptoKey) =>
-                  Promise.all(
-                    ctc.services!.map(svc =>
-                      AES.encrypt(key, utils.utf82ua(JSON.stringify({ content: svc.content })))
-                    )
-                  )
-                    .then(eSvcs => {
-                      console.log("eSvcs ", eSvcs)
-                      ctc.services!.forEach((svc, idx) => {
-                        svc.encryptedSelf = btoa(utils.ua2text(eSvcs[idx]))
-                        delete svc.content
-                      })
-                    })
-                    .then(() =>
-                      AES.encrypt(key, utils.utf82ua(JSON.stringify({ descr: ctc.descr })))
-                    )
-                    .then(es => {
-                      ctc.encryptedSelf = btoa(utils.ua2text(es))
-                      delete ctc.descr
-                      return ctc
-                    })
-                )
-            }
+            )
+              .then(eSvcs => {
+                console.log("eSvcs ", eSvcs)
+                ctc.services!.forEach((svc, idx) => {
+                  svc.encryptedSelf = btoa(utils.ua2text(eSvcs[idx]))
+                  delete svc.content
+                })
+              })
+              .then(() => AES.encrypt(key, utils.utf82ua(JSON.stringify({ descr: ctc.descr }))))
+              .then(es => {
+                ctc.encryptedSelf = btoa(utils.ua2text(es))
+                delete ctc.descr
+                return ctc
+              })
           )
       )
     )
