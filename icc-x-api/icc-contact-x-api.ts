@@ -21,24 +21,34 @@ export class IccContactXApi extends iccContactApi {
   }
 
   newInstance(user: models.UserDto, patient: models.PatientDto, c: any) {
-    const contact = _.extend(
-      {
-        id: this.crypto.randomUuid(),
-        _type: "org.taktik.icure.entities.Contact",
-        created: new Date().getTime(),
-        modified: new Date().getTime(),
-        responsible: user.healthcarePartyId,
-        author: user.id,
-        codes: [],
-        tags: [],
-        groupId: this.crypto.randomUuid(),
-        subContacts: [],
-        services: [],
-        openingDate: parseInt(moment().format("YYYYMMDDHHmmss"))
-      },
-      c || {}
+    const contact = new models.ContactDto(
+      _.extend(
+        {
+          id: this.crypto.randomUuid(),
+          _type: "org.taktik.icure.entities.Contact",
+          created: new Date().getTime(),
+          modified: new Date().getTime(),
+          responsible: user.healthcarePartyId,
+          author: user.id,
+          codes: [],
+          tags: [],
+          groupId: this.crypto.randomUuid(),
+          subContacts: [],
+          services: [],
+          openingDate: parseInt(moment().format("YYYYMMDDHHmmss"))
+        },
+        c || {}
+      )
     )
 
+    return this.initDelegationsAndEncryptionKeys(user, patient, contact)
+  }
+
+  private initDelegationsAndEncryptionKeys(
+    user: models.UserDto,
+    patient: models.PatientDto,
+    contact: models.ContactDto
+  ) {
     return this.crypto
       .extractDelegationsSFKs(patient, user.healthcarePartyId!)
       .then(secretForeignKeys =>
