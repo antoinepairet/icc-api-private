@@ -54,6 +54,8 @@ export class MessageDto {
 
   delegations?: { [key: string]: Array<models.DelegationDto> }
 
+  encryptionKeys?: { [key: string]: Array<models.DelegationDto> }
+
   fromAddress?: string
 
   fromHealthcarePartyId?: string

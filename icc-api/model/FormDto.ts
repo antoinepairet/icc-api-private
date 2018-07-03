@@ -54,6 +54,8 @@ export class FormDto {
 
   delegations?: { [key: string]: Array<models.DelegationDto> }
 
+  encryptionKeys?: { [key: string]: Array<models.DelegationDto> }
+
   descr?: string
 
   formTemplateId?: string

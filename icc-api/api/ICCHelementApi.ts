@@ -83,6 +83,24 @@ export class iccHelementApi {
       .then(doc => (doc.body as Array<JSON>).map(it => new models.HealthElementDto(it)))
       .catch(err => this.handleError(err))
   }
+  findDelegationsStubsByHCPartyPatientSecretFKeys(
+    hcPartyId?: string,
+    secretFKeys?: string
+  ): Promise<Array<models.IcureStubDto> | any> {
+    let _body = null
+
+    const _url =
+      this.host +
+      "/helement/byHcPartySecretForeignKeys/delegations" +
+      "?ts=" +
+      new Date().getTime() +
+      (hcPartyId ? "&hcPartyId=" + hcPartyId : "") +
+      (secretFKeys ? "&secretFKeys=" + secretFKeys : "")
+
+    return XHR.sendCommand("GET", _url, this.headers, _body)
+      .then(doc => (doc.body as Array<JSON>).map(it => new models.IcureStubDto(it)))
+      .catch(err => this.handleError(err))
+  }
   getHealthElement(healthElementId: string): Promise<models.HealthElementDto | any> {
     let _body = null
 
@@ -121,6 +139,17 @@ export class iccHelementApi {
 
     return XHR.sendCommand("POST", _url, this.headers, _body)
       .then(doc => new models.HealthElementDto(doc.body as JSON))
+      .catch(err => this.handleError(err))
+  }
+  setHealthElementsDelegations(body?: Array<models.IcureStubDto>): Promise<any | Boolean> {
+    let _body = null
+    _body = body
+
+    const _url =
+      this.host + "/helement/byHcPartySecretForeignKeys/delegations" + "?ts=" + new Date().getTime()
+
+    return XHR.sendCommand("POST", _url, this.headers, _body)
+      .then(doc => (doc.contentType.startsWith("application/octet-stream") ? doc.body : true))
       .catch(err => this.handleError(err))
   }
 }

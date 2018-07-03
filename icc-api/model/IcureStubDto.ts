@@ -24,9 +24,9 @@
 
 import * as models from "./models"
 
-export class PatientDto {
+export class IcureStubDto {
   constructor(json: JSON | any) {
-    Object.assign(this as PatientDto, json)
+    Object.assign(this as IcureStubDto, json)
   }
   id?: string
 
@@ -55,76 +55,4 @@ export class PatientDto {
   delegations?: { [key: string]: Array<models.DelegationDto> }
 
   encryptionKeys?: { [key: string]: Array<models.DelegationDto> }
-
-  mergeToPatientId?: string
-
-  mergedIds?: Array<string>
-
-  firstName?: string
-
-  lastName?: string
-
-  alias?: string
-
-  active?: boolean
-
-  chronicalDisease?: string
-
-  ssin?: string
-
-  civility?: string
-
-  gender?: string
-
-  maidenName?: string
-
-  spouseName?: string
-
-  partnerName?: string
-
-  personalStatus?: string
-
-  dateOfBirth?: number
-
-  dateOfDeath?: number
-
-  placeOfBirth?: string
-
-  placeOfDeath?: string
-
-  education?: string
-
-  profession?: string
-
-  note?: string
-
-  warning?: string
-
-  nationality?: string
-
-  preferredUserId?: string
-
-  picture?: string
-
-  userId?: string
-
-  externalId?: string
-
-  addresses?: Array<models.AddressDto>
-
-  insurabilities?: Array<models.InsurabilityDto>
-
-  languages?: Array<string>
-
-  partnerships?: Array<models.PartnershipDto>
-
-  patientHealthCareParties?: Array<models.PatientHealthCarePartyDto>
-
-  financialInstitutionInformation?: Array<models.FinancialInstitutionInformationDto>
-
-  parameters?: { [key: string]: Array<string> }
-
-  patientProfessions?: Array<models.CodeDto>
-
-  encryptedSelf?: string
 }

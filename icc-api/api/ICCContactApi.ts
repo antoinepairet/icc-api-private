@@ -185,6 +185,24 @@ export class iccContactApi {
       .then(doc => (doc.body as Array<JSON>).map(it => new models.ContactDto(it)))
       .catch(err => this.handleError(err))
   }
+  findDelegationsStubsByHCPartyPatientSecretFKeys(
+    hcPartyId?: string,
+    secretFKeys?: string
+  ): Promise<Array<models.ContactDto> | any> {
+    let _body = null
+
+    const _url =
+      this.host +
+      "/contact/byHcPartySecretForeignKeys/delegations" +
+      "?ts=" +
+      new Date().getTime() +
+      (hcPartyId ? "&hcPartyId=" + hcPartyId : "") +
+      (secretFKeys ? "&secretFKeys=" + secretFKeys : "")
+
+    return XHR.sendCommand("GET", _url, this.headers, _body)
+      .then(doc => (doc.body as Array<JSON>).map(it => new models.ContactDto(it)))
+      .catch(err => this.handleError(err))
+  }
   getContact(contactId: string): Promise<models.ContactDto | any> {
     let _body = null
 
@@ -264,6 +282,17 @@ export class iccContactApi {
 
     return XHR.sendCommand("POST", _url, this.headers, _body)
       .then(doc => new models.ContactDto(doc.body as JSON))
+      .catch(err => this.handleError(err))
+  }
+  setHealthElementsDelegations(body?: Array<models.IcureStubDto>): Promise<any | Boolean> {
+    let _body = null
+    _body = body
+
+    const _url =
+      this.host + "/contact/byHcPartySecretForeignKeys/delegations" + "?ts=" + new Date().getTime()
+
+    return XHR.sendCommand("POST", _url, this.headers, _body)
+      .then(doc => (doc.contentType.startsWith("application/octet-stream") ? doc.body : true))
       .catch(err => this.handleError(err))
   }
 }
