@@ -366,7 +366,7 @@ export class iccInvoiceApi {
       .then(doc => (doc.body as Array<JSON>).map(it => new models.InvoiceDto(it)))
       .catch(err => this.handleError(err))
   }
-  setHealthElementsDelegations(body?: Array<models.IcureStubDto>): Promise<any | Boolean> {
+  setInvoicesDelegations(body?: Array<models.IcureStubDto>): Promise<any | Boolean> {
     let _body = null
     _body = body
 
