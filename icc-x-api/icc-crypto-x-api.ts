@@ -180,15 +180,22 @@ export class IccCryptoXApi {
   }
 
   appendObjectDelegations(
-    modifiedObject: any,
+    modifiedObject: any | null,
     parentObject: any | null,
     ownerId: string,
     delegateId: string,
-    secretIdOfModifiedObject: string
+    secretIdOfModifiedObject: string | null
   ) {
     return this.hcpartyBaseApi
       .getHealthcareParty(ownerId)
-      .then(owner => owner.hcPartyKeys[delegateId][0])
+      .then(owner => {
+        if (!owner.hcPartyKeys[delegateId]) {
+          return this.generateKeyForDelegate(ownerId, delegateId).then(
+            owner => owner.hcPartyKeys[delegateId][0]
+          )
+        }
+        return Promise.resolve(owner.hcPartyKeys[delegateId][0])
+      })
       .then(encryptedHcPartyKey =>
         this.decryptHcPartyKey(ownerId, delegateId, encryptedHcPartyKey, true)
       )
@@ -282,9 +289,12 @@ export class IccCryptoXApi {
     ownerId: string,
     secretIdOfModifiedObject: string
   ): Promise<{
-    encryptionKeys: any
-    secretId: string
+    encryptionKeys: Array<string>
+    secretId: string | null
   }> {
+    if (!secretIdOfModifiedObject) {
+      return Promise.resolve({ encryptionKeys: [], secretId: null })
+    }
     return this.hcpartyBaseApi
       .getHealthcareParty(ownerId)
       .then(owner => owner.hcPartyKeys[ownerId][0])
@@ -351,7 +361,7 @@ export class IccCryptoXApi {
   ): Promise<Array<string>> {
     const dels = document.delegations
     if (!dels || !dels[hcpartyId] || dels[hcpartyId].length <= 0) {
-      throw "There is not delegation for this healthcare party (" +
+      throw "There is no delegation for this healthcare party (" +
         hcpartyId +
         ") in document (" +
         document.id +
@@ -370,9 +380,12 @@ export class IccCryptoXApi {
       | models.HealthElementDto,
     hcpartyId: string
   ): Promise<Array<string>> {
+    if (!document.encryptionKeys) {
+      return Promise.resolve([])
+    }
     const eks = document.encryptionKeys
     if (!eks || !eks[hcpartyId] || eks[hcpartyId].length <= 0) {
-      throw "There is not delegation for this healthcare party (" +
+      throw "There is no encryption key for this healthcare party (" +
         hcpartyId +
         ") in document (" +
         document.id +
@@ -491,5 +504,34 @@ export class IccCryptoXApi {
   loadKeychainFromBrowserLocalStorage(id: String) {
     const lsItem = localStorage.getItem("org.taktik.icure.ehealth.keychain." + id)
     return lsItem && this.utils.base64toByteArray(lsItem)
+  }
+
+  generateKeyForDelegate(ownerId: string, delegateId: string) {
+    return Promise.all([
+      this.hcpartyBaseApi.getHealthcareParty(ownerId),
+      this.hcpartyBaseApi.getHealthcareParty(delegateId)
+    ]).then(([owner, delegate]) =>
+      this.AES.generateCryptoKey(true)
+        .then(AESKey => {
+          const ownerPubKey = utils.spkiToJwk(utils.hex2ua(owner.publicKey!))
+          const delegatePubKey = utils.spkiToJwk(utils.hex2ua(delegate.publicKey!))
+
+          return Promise.all([this.RSA.importKey("jwk", ownerPubKey, ["decrypt"])]).then(
+            ([ownerImportedKey, delegateImportedKey]) =>
+              Promise.all([
+                this.RSA.encrypt(ownerImportedKey, this.utils.hex2ua(AESKey as string)),
+                this.RSA.encrypt(delegateImportedKey, this.utils.hex2ua(AESKey as string))
+              ])
+          )
+        })
+        .then(
+          ([ownerKey, delegateKey]) =>
+            (owner.hcPartyKeys[delegateId] = [
+              this.utils.ua2hex(ownerKey),
+              this.utils.ua2hex(delegateKey)
+            ])
+        )
+        .then(() => this.hcpartyBaseApi.modifyHealthcareParty(owner))
+    )
   }
 }
