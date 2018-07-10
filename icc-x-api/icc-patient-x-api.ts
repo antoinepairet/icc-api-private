@@ -97,11 +97,11 @@ export class IccPatientXApi extends iccPatientApi {
   share(patId: string, ownerId: string, delegateIds: Array<string>): Promise<models.PatientDto> {
     return this.getPatient(patId).then((p: models.PatientDto) => {
       const psfksPromise =
-        p.delegations && p.delegations[ownerId].length
+        p.delegations && p.delegations[ownerId] && p.delegations[ownerId].length
           ? this.crypto.extractDelegationsSFKs(p, ownerId)
           : Promise.resolve([])
       const peksPromise =
-        p.encryptionKeys && p.encryptionKeys[ownerId].length
+        p.encryptionKeys && p.encryptionKeys[ownerId] && p.encryptionKeys[ownerId].length
           ? this.crypto.extractEncryptionsSKs(p, ownerId)
           : Promise.resolve([])
 
