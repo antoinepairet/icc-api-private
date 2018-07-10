@@ -183,4 +183,14 @@ export class iccDocumentApi {
       .then(doc => new models.DocumentDto(doc.body as JSON))
       .catch(err => this.handleError(err))
   }
+  setDocumentsDelegations(body?: Array<models.IcureStubDto>): Promise<any | Boolean> {
+    let _body = null
+    _body = body
+
+    const _url = this.host + "/document/delegations" + "?ts=" + new Date().getTime()
+
+    return XHR.sendCommand("POST", _url, this.headers, _body)
+      .then(doc => (doc.contentType.startsWith("application/octet-stream") ? doc.body : true))
+      .catch(err => this.handleError(err))
+  }
 }

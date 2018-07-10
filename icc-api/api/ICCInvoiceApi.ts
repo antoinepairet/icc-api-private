@@ -370,8 +370,7 @@ export class iccInvoiceApi {
     let _body = null
     _body = body
 
-    const _url =
-      this.host + "/invoice/byHcPartySecretForeignKeys/delegations" + "?ts=" + new Date().getTime()
+    const _url = this.host + "/invoice/delegations" + "?ts=" + new Date().getTime()
 
     return XHR.sendCommand("POST", _url, this.headers, _body)
       .then(doc => (doc.contentType.startsWith("application/octet-stream") ? doc.body : true))

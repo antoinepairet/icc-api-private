@@ -343,8 +343,13 @@ export class IccCryptoXApi {
   }
 
   addDelegationsAndEncryptionKeys(
-    parent: models.PatientDto | models.MessageDto,
-    child: models.ContactDto | models.InvoiceDto | models.DocumentDto | models.HealthElementDto,
+    parent: models.PatientDto | models.MessageDto | null,
+    child:
+      | models.PatientDto
+      | models.ContactDto
+      | models.InvoiceDto
+      | models.DocumentDto
+      | models.HealthElementDto,
     ownerId: string,
     delegateId: string,
     secretDelegationKey: string,
