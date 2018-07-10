@@ -126,7 +126,7 @@ export class IccPatientXApi extends iccPatientApi {
           }))
           const docIds: { [key: string]: number } = {}
           ctcs.forEach(
-            c =>
+            (c: models.ContactDto) =>
               c.services &&
               c.services.forEach(
                 s =>
