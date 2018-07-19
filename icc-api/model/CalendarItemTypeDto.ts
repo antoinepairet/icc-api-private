@@ -24,47 +24,13 @@
 
 import * as models from './models';
 
-export class CalendarItemDto {
+export class CalendarItemTypeDto {
   constructor(json: JSON | any) {
-    Object.assign(this as CalendarItemDto, json)
+    Object.assign(this as CalendarItemTypeDto, json)
   }
 
   id?: string;
 
-  rev?: string;
-
-  deletionDate?: number;
-
-  created?: number;
-
-  modified?: number;
-
-  endOfLife?: number;
-
-  author?: string;
-
-  responsible?: string;
-
-  codes?: Array<models.CodeDto>;
-
-  tags?: Array<models.CodeDto>;
-
-  secretForeignKeys?: Array<string>;
-
-  cryptedForeignKeys?: { [key: string]: Array<models.DelegationDto>; };
-
-  delegations?: { [key: string]: Array<models.DelegationDto>; };
-
-  title?: string;
-
-  type?: string;
-
-  startTime?: number;
-
-  endTime?: number;
-
-  patient?: string;
-
-  note?: string;
+  name?: string;
 
 }
