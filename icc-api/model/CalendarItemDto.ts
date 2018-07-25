@@ -55,6 +55,8 @@ export class CalendarItemDto {
 
   delegations?: { [key: string]: Array<models.DelegationDto>; };
 
+  encryptionKeys?: { [key: string]: Array<models.DelegationDto> };
+
   title?: string;
 
   type?: string;
