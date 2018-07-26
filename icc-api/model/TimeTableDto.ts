@@ -22,11 +22,11 @@
  * limitations under the License.
  */
 
-import * as models from './models';
+import * as models from '../model/models';
 
-export class CalendarItemDto {
+export class TimeTableDto {
   constructor(json: JSON | any) {
-    Object.assign(this as CalendarItemDto, json)
+    Object.assign(this as TimeTableDto, json)
   }
 
   id?: string;
@@ -55,18 +55,12 @@ export class CalendarItemDto {
 
   delegations?: { [key: string]: Array<models.DelegationDto>; };
 
-  encryptionKeys?: { [key: string]: Array<models.DelegationDto> };
-
-  title?: string;
-
-  type?: string;
+  name?: string;
 
   startTime?: number;
 
   endTime?: number;
 
-  patient?: string;
-
-  note?: string;
+  items?: Array<models.TimeTableItemDto>;
 
 }

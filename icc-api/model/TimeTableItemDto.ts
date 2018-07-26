@@ -22,51 +22,20 @@
  * limitations under the License.
  */
 
-import * as models from './models';
+import {TimeTableHourDto} from "./TimeTableHourDto";
 
-export class CalendarItemDto {
+export class TimeTableItemDto{
+
   constructor(json: JSON | any) {
-    Object.assign(this as CalendarItemDto, json)
+    Object.assign(this as TimeTableItemDto, json)
   }
 
-  id?: string;
+  days?: Array<string>;
 
-  rev?: string;
+  hours?: Array<TimeTableHourDto>;
 
-  deletionDate?: number;
+  recurrenceType?: string;
 
-  created?: number;
-
-  modified?: number;
-
-  endOfLife?: number;
-
-  author?: string;
-
-  responsible?: string;
-
-  codes?: Array<models.CodeDto>;
-
-  tags?: Array<models.CodeDto>;
-
-  secretForeignKeys?: Array<string>;
-
-  cryptedForeignKeys?: { [key: string]: Array<models.DelegationDto>; };
-
-  delegations?: { [key: string]: Array<models.DelegationDto>; };
-
-  encryptionKeys?: { [key: string]: Array<models.DelegationDto> };
-
-  title?: string;
-
-  type?: string;
-
-  startTime?: number;
-
-  endTime?: number;
-
-  patient?: string;
-
-  note?: string;
+  activityType?: string;
 
 }
