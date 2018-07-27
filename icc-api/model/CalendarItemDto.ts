@@ -23,6 +23,7 @@
  */
 
 import * as models from './models';
+import { CalendarItemTypeDto } from "./models"
 
 export class CalendarItemDto {
   constructor(json: JSON | any) {
@@ -59,7 +60,7 @@ export class CalendarItemDto {
 
   title?: string;
 
-  type?: string;
+  type?: CalendarItemTypeDto;
 
   startTime?: number;
 
