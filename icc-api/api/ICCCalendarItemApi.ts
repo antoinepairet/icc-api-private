@@ -58,11 +58,11 @@ export class iccCalendarItemApi {
 
   }
 
-  deleteCalendarItems(contactIds: string): Promise<Array<string> | any> {
+  deleteCalendarItems(calendarItemIds: string): Promise<Array<string> | any> {
     let _body = null
 
 
-    const _url = this.host + "/calendarItem/{contactIds}".replace("{contactIds}", contactIds + "") + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItem/{calendarItemIds}".replace("{calendarItemIds}", calendarItemIds + "") + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('DELETE', _url, this.headers, _body)
       .then(doc => (doc.body as Array<JSON>).map(it => JSON.parse(JSON.stringify(it))))

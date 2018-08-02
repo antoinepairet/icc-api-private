@@ -31,8 +31,12 @@ export class CalendarItemTypeDto {
 
   id?: string;
 
+  rev?: string;
+
   name?: string;
 
   color?: string;
-  
+
+  duration?: number;
+
 }
