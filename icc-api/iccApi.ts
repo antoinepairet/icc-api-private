@@ -1,4 +1,5 @@
 export * from "./api/iccAccesslogApi"
+export * from "./api/iccAgendaApi"
 export * from "./api/iccAuthApi"
 export * from "./api/iccBeabApi"
 export * from "./api/iccBechapterApi"
