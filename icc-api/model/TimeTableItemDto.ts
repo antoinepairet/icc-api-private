@@ -37,9 +37,9 @@ export class TimeTableItemDto{
 
   recurrenceType?: string;
 
-  activityType?: string;
+  calendarItemTypeId?: string;
 
-  place?: PlaceDto;
+  placeId?: string;
 
   homeVisit?: boolean;
 

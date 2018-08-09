@@ -66,6 +66,10 @@ export class CalendarItemDto {
 
   homeVisit?: boolean;
 
+  phoneNumber?: string;
+
+  placeId?: string;
+
   address?: AddressDto;
 
   addressText?: string;
@@ -74,6 +78,10 @@ export class CalendarItemDto {
 
   endTime?: number;
 
+  duration?: number;
+
   details?: string;
+
+  meetingTags?: Array<string>;
 
 }
