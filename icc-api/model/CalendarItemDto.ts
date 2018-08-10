@@ -60,9 +60,9 @@ export class CalendarItemDto {
 
   title?: string;
 
-  type?: CalendarItemTypeDto;
+  calendarItemTypeId?: string;
 
-  patient?: string;
+  patientId?: string;
 
   homeVisit?: boolean;
 
