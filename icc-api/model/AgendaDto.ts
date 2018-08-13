@@ -36,7 +36,7 @@ export class AgendaDto {
 
   name?: string;
 
-  user?: string;
+  userId?: string;
 
   rights?: Array<RightDto>;
 

@@ -33,7 +33,7 @@ export class RightDto {
 
   rev?: string;
 
-  user?: string;
+  userId?: string;
 
   read?: boolean;
 

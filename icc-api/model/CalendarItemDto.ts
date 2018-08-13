@@ -84,6 +84,8 @@ export class CalendarItemDto {
 
   details?: string;
 
+  agendaId?: string;
+
   meetingTags?: Array<string>;
 
 }
