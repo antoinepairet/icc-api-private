@@ -112,22 +112,29 @@ export class iccTimeTableApi {
 
   //endregion timeTable
 
-  //region byPeriodAndHcPartyId
-
-  byPeriodAndHcPartyId(startDate: number, endDate: number, hcPartyId: string): Promise<Array<models.TimeTableDto> | any> {
+  byAgendaId(agendaId: string): Promise<Array<models.TimeTableDto> | any> {
     let _body = null;
 
-    const _url = this.host + "/timeTable/byPeriodAndHcPartyId" + "?ts=" + (new Date).getTime()
-      + (startDate ? "&startDate=" + startDate : "")
-      + (endDate ? "&endDate=" + endDate : "")
-      + (hcPartyId ? "&hcPartyId=" + hcPartyId : "");
+    const _url = this.host + "/timeTable/byAgendaId" + "?ts=" + (new Date).getTime()
+      + (agendaId ? "&agendaId=" + agendaId : "");
 
     return XHR.sendCommand('POST', _url, this.headers, _body)
       .then(doc => (doc.body as Array<JSON>).map(it => new models.TimeTableDto(it)))
       .catch(err => this.handleError(err));
   }
 
-  //endregion byPeriodAndHcPartyId
+  byPeriodAndAgendaId(startDate: number, endDate: number, agendaId: string): Promise<Array<models.TimeTableDto> | any> {
+    let _body = null;
+
+    const _url = this.host + "/timeTable/byPeriodAndAgendaId" + "?ts=" + (new Date).getTime()
+      + (startDate ? "&startDate=" + startDate : "")
+      + (endDate ? "&endDate=" + endDate : "")
+      + (agendaId ? "&agendaId=" + agendaId : "");
+
+    return XHR.sendCommand('POST', _url, this.headers, _body)
+      .then(doc => (doc.body as Array<JSON>).map(it => new models.TimeTableDto(it)))
+      .catch(err => this.handleError(err));
+  }
 
 }
 

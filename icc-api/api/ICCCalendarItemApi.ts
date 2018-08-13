@@ -110,19 +110,17 @@ export class iccCalendarItemApi {
   }
   //endregion
 
-  //region hcparty
-  byPeriodAndHcPartyId(startDate: number, endDate: number, hcPartyId: string): Promise<Array<models.CalendarItemDto> | any> {
+  byPeriodAndAgendaId(startDate: number, endDate: number, agendaId: string): Promise<Array<models.CalendarItemDto> | any> {
     let _body = null;
 
-    const _url = this.host + "/calendarItem/byPeriodAndHcPartyId" + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItem/byPeriodAndAgendaId" + "?ts=" + (new Date).getTime()
       + (startDate ? "&startDate=" + startDate : "")
       + (endDate ? "&endDate=" + endDate : "")
-      + (hcPartyId ? "&hcPartyId=" + hcPartyId : "");
+      + (agendaId ? "&agendaId=" + agendaId : "");
 
     return XHR.sendCommand('POST', _url, this.headers, _body)
       .then(doc => (doc.body as Array<JSON>).map(it => new models.CalendarItemDto(it)))
       .catch(err => this.handleError(err));
   }
-  //endregion
 }
 
