@@ -80,6 +80,8 @@ export class CalendarItemDto {
 
   duration?: number;
 
+  allDay?: boolean;
+
   details?: string;
 
   meetingTags?: Array<string>;
