@@ -29,10 +29,6 @@ export class RightDto {
     Object.assign(this as RightDto, json)
   }
 
-  id?: string;
-
-  rev?: string;
-
   userId?: string;
 
   read?: boolean;
