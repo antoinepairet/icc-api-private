@@ -64,6 +64,8 @@ export class CalendarItemDto {
 
   patientId?: string;
 
+  important?: boolean;
+
   homeVisit?: boolean;
 
   phoneNumber?: string;
