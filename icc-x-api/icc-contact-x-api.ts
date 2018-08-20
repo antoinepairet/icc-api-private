@@ -147,7 +147,80 @@ export class IccContactXApi extends iccContactApi {
       })
   }
 
-  modifyContactWithHcParty(
+  filterBy(
+    startKey?: string,
+    startDocumentId?: string,
+    limit?: number,
+    body?: models.FilterChain
+  ): Promise<models.ContactPaginatedList | any> {
+    throw "Cannot call a method that returns contacts without providing a user for decryption"
+  }
+
+  findByHCPartyFormId(
+    hcPartyId?: string,
+    formId?: string
+  ): Promise<Array<models.ContactDto> | any> {
+    throw "Cannot call a method that returns contacts without providing a user for decryption"
+  }
+
+  findByHCPartyFormIds(
+    hcPartyId?: string,
+    body?: models.ListOfIdsDto
+  ): Promise<Array<models.ContactDto> | any> {
+    throw "Cannot call a method that returns contacts without providing a user for decryption"
+  }
+
+  getContact(contactId: string): Promise<models.ContactDto | any> {
+    throw "Cannot call a method that returns contacts without providing a user for decryption"
+  }
+
+  getContacts(body?: models.ListOfIdsDto): Promise<Array<models.ContactDto> | any> {
+    throw "Cannot call a method that returns contacts without providing a user for decryption"
+  }
+
+  filterByWithUser(
+    user: models.UserDto,
+    startKey?: string,
+    startDocumentId?: string,
+    limit?: number,
+    body?: models.FilterChain
+  ): Promise<models.ContactPaginatedList | any> {
+    return super
+      .filterBy(startKey, startDocumentId, limit, body)
+      .then(ctcs => this.encrypt(user, ctcs))
+  }
+
+  findByHCPartyFormIdWithUser(
+    user: models.UserDto,
+    hcPartyId?: string,
+    formId?: string
+  ): Promise<Array<models.ContactDto> | any> {
+    return super.findByHCPartyFormId(hcPartyId, formId).then(ctcs => this.encrypt(user, ctcs))
+  }
+
+  findByHCPartyFormIdsWithUser(
+    user: models.UserDto,
+    hcPartyId?: string,
+    body?: models.ListOfIdsDto
+  ): Promise<Array<models.ContactDto> | any> {
+    return super.findByHCPartyFormIds(hcPartyId, body).then(ctcs => this.encrypt(user, ctcs))
+  }
+
+  getContactWithUser(user: models.UserDto, contactId: string): Promise<models.ContactDto | any> {
+    return super
+      .getContact(contactId)
+      .then(ctc => this.decrypt(user.healthcarePartyId!, [ctc]))
+      .then(ctcs => ctcs[0])
+  }
+
+  getContactsWithUser(
+    user: models.UserDto,
+    body?: models.ListOfIdsDto
+  ): Promise<Array<models.ContactDto> | any> {
+    return super.getContacts(body).then(ctcs => this.decrypt(user.healthcarePartyId!, ctcs))
+  }
+
+  modifyContactWithUser(
     user: models.UserDto,
     body?: models.ContactDto
   ): Promise<models.ContactDto | any> {
@@ -156,7 +229,7 @@ export class IccContactXApi extends iccContactApi {
       : Promise.resolve(null)
   }
 
-  createContactWithHcParty(
+  createContactWithUser(
     user: models.UserDto,
     body?: models.ContactDto
   ): Promise<models.ContactDto | any> {
@@ -214,7 +287,7 @@ export class IccContactXApi extends iccContactApi {
     )
   }
 
-  decrypt(hcpartyId: string, ctcs: Array<models.ContactDto>) {
+  decrypt(hcpartyId: string, ctcs: Array<models.ContactDto>): Promise<Array<models.ContactDto>> {
     return Promise.all(
       ctcs.map(ctc =>
         this.crypto
@@ -295,17 +368,17 @@ export class IccContactXApi extends iccContactApi {
                           return svc
                         })
                     } else {
-                      return Promise.resolve(svc)
+                      return svc
                     }
                   })
-                )
-                  .then(svcs => {
-                    ctc.services = svcs
-                    //console.log('ES:'+ctc.encryptedSelf)
-                    return ctc.encryptedSelf
-                      ? AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, ""))).then(
-                          key =>
-                            new Promise((resolve: (value: any) => any) => {
+                ).then((svcs: Array<models.ServiceDto>) => {
+                  ctc.services = svcs
+                  //console.log('ES:'+ctc.encryptedSelf)
+                  return ctc.encryptedSelf
+                    ? AES.importKey("raw", utils.hex2ua(sfks[0].replace(/-/g, ""))).then(
+                        key =>
+                          new Promise<models.ContactDto>(
+                            (resolve: (value: models.ContactDto) => any) => {
                               AES.decrypt(key, utils.text2ua(atob(ctc.encryptedSelf!))).then(
                                 dec => {
                                   let jsonContent
@@ -326,19 +399,15 @@ export class IccContactXApi extends iccContactApi {
                                   resolve(ctc)
                                 }
                               )
-                            })
-                        )
-                      : Promise.resolve(ctc)
-                  })
-                  .catch(function(e) {
-                    console.log("Abnormal error in decryption", e)
-                  })
+                            }
+                          )
+                      )
+                    : Promise.resolve(ctc)
+                })
               })
           })
       )
-    ).catch(function(e) {
-      console.log("Abnormal error in decryption", e)
-    })
+    )
   }
 
   contactOfService(ctcs: Array<models.ContactDto>, svcId: string): models.ContactDto | undefined {

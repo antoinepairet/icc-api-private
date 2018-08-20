@@ -120,6 +120,7 @@ export class iccCodeApi {
     types?: string,
     language?: string,
     label?: string,
+    startKey?: string,
     startDocumentId?: string,
     limit?: number
   ): Promise<models.CodePaginatedList | any> {
@@ -133,8 +134,9 @@ export class iccCodeApi {
       (region ? "&region=" + region : "") +
       (types ? "&types=" + types : "") +
       (language ? "&language=" + language : "") +
-      (label ? "&label=" + label : "") +
-      (startDocumentId ? "&startDocumentId=" + startDocumentId : "") +
+      (label ? "&label=" + encodeURIComponent(label) : "") +
+      (startKey ? "&startKey=" + encodeURIComponent(startKey) : "") +
+      (startDocumentId ? "&startDocumentId=" + encodeURIComponent(startDocumentId) : "") +
       (limit ? "&limit=" + limit : "")
 
     return XHR.sendCommand("GET", _url, this.headers, _body)

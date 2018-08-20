@@ -12,14 +12,18 @@ export class AESUtils {
 
   encrypt(cryptoKey: CryptoKey, plainData: ArrayBuffer | Uint8Array) {
     return new Promise((resolve: (value: ArrayBuffer) => any, reject: (reason: any) => any) => {
-      const plainDataArrayBuffer =
-        plainData instanceof Uint8Array ? (plainData.buffer as ArrayBuffer) : plainData
+      if (plainData instanceof Uint8Array) {
+        const buffer = plainData.buffer
+        plainData = (buffer.byteLength > plainData.byteLength
+          ? buffer.slice(0, plainData.byteLength)
+          : buffer) as ArrayBuffer
+      }
       const aesAlgorithmEncrypt = {
         name: this.aesAlgorithmEncryptName,
         iv: this.generateIV(this.ivLength)
       }
       window.crypto.subtle
-        .encrypt(aesAlgorithmEncrypt, cryptoKey, plainDataArrayBuffer)
+        .encrypt(aesAlgorithmEncrypt, cryptoKey, plainData)
         .then(
           cipherData =>
             resolve(utils.appendBuffer(aesAlgorithmEncrypt.iv!.buffer! as ArrayBuffer, cipherData)),
