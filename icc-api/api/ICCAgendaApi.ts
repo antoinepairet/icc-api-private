@@ -115,5 +115,16 @@ export class iccAgendaApi {
       .then(doc => new models.AgendaDto(doc.body as JSON))
       .catch(err => this.handleError(err));
   }
+
+  readableForUser(userId: string): Promise<Array<models.AgendaDto> | any> {
+    let _body = null;
+
+    const _url = this.host + "/agenda/readableForUser" + "?ts=" + (new Date).getTime()
+      + (userId ? "&userId=" + userId : "");
+
+    return XHR.sendCommand('GET', _url, this.headers, _body)
+      .then(doc => (doc.body as Array<JSON>).map(it => new models.AgendaDto(it)))
+      .catch(err => this.handleError(err));
+  }
 }
 

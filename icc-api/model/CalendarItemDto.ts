@@ -23,8 +23,8 @@
  */
 
 import * as models from './models';
-import {AddressDto, CalendarItemTypeDto} from "./models";
-import { CalendarItemTagDto } from "./CalendarItemTagDto"
+import {AddressDto, CalendarItemTypeDto, PlaceDto} from "./models";
+import {CalendarItemTagDto} from "./CalendarItemTagDto";
 
 export class CalendarItemDto {
   constructor(json: JSON | any) {

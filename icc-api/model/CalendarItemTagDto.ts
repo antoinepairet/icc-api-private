@@ -31,7 +31,7 @@ export class CalendarItemTagDto {
 
   code?: string;
 
-  date?: string; //YYYYMMDDHHMMSS
+  date?: number; //YYYYMMDDHHMMSS
 
   userId?: string;
 

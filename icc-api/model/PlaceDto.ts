@@ -38,6 +38,4 @@ export class PlaceDto {
 
   address?: AddressDto;
 
-  phoneNumber?: string;
-
 }
