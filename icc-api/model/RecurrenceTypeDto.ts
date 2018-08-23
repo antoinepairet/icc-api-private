@@ -31,6 +31,8 @@ export class RecurrenceTypeDto {
 
   id?: string;
 
+  code?: string;
+
   name?: string;
 
 }

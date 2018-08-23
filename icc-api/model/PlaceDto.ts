@@ -22,11 +22,12 @@
  * limitations under the License.
  */
 
-import * as models from './models';
+import {AddressDto} from "./AddressDto";
 
-export class CalendarItemTypeDto {
+export class PlaceDto {
+
   constructor(json: JSON | any) {
-    Object.assign(this as CalendarItemTypeDto, json)
+    Object.assign(this as PlaceDto, json)
   }
 
   id?: string;
@@ -35,8 +36,8 @@ export class CalendarItemTypeDto {
 
   name?: string;
 
-  color?: string;
+  address?: AddressDto;
 
-  duration?: number;
+  phoneNumber?: string;
 
 }

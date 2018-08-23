@@ -23,6 +23,7 @@
  */
 
 import {TimeTableHourDto} from "./TimeTableHourDto";
+import { PlaceDto } from "./PlaceDto"
 
 export class TimeTableItemDto{
 
@@ -36,6 +37,10 @@ export class TimeTableItemDto{
 
   recurrenceType?: string;
 
-  activityType?: string;
+  calendarItemTypeId?: string;
+
+  placeId?: string;
+
+  homeVisit?: boolean;
 
 }

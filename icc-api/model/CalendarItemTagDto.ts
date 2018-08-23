@@ -24,19 +24,15 @@
 
 import * as models from './models';
 
-export class CalendarItemTypeDto {
+export class CalendarItemTagDto {
   constructor(json: JSON | any) {
-    Object.assign(this as CalendarItemTypeDto, json)
+    Object.assign(this as CalendarItemTagDto, json)
   }
 
-  id?: string;
+  code?: string;
 
-  rev?: string;
+  date?: string; //YYYYMMDDHHMMSS
 
-  name?: string;
-
-  color?: string;
-
-  duration?: number;
+  userId?: string;
 
 }
