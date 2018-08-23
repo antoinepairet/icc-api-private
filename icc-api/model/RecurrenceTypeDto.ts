@@ -24,12 +24,14 @@
 
 import * as models from './models';
 
-export class CalendarItemTypeDto {
+export class RecurrenceTypeDto {
   constructor(json: JSON | any) {
-    Object.assign(this as CalendarItemTypeDto, json)
+    Object.assign(this as RecurrenceTypeDto, json)
   }
 
   id?: string;
+
+  code?: string;
 
   name?: string;
 

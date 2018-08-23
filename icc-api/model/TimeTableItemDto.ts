@@ -22,21 +22,25 @@
  * limitations under the License.
  */
 
-import {IcureStubDto} from "./models";
+import {TimeTableHourDto} from "./TimeTableHourDto";
+import {PlaceDto} from "./PlaceDto";
 
-export class TimeTableItemDto extends IcureStubDto{
+export class TimeTableItemDto {
 
   constructor(json: JSON | any) {
-    super(json);
     Object.assign(this as TimeTableItemDto, json)
   }
 
-  name?: string;
+  days?: Array<string>;
 
-  startTime?: number;
+  hours?: Array<TimeTableHourDto>;
 
-  endTime?: number;
+  recurrenceTypes?: Array<string>;
 
-  items?: Array<TimeTableItemDto>;
+  calendarItemTypeId?: string;
+
+  placeId?: string;
+
+  homeVisit?: boolean;
 
 }

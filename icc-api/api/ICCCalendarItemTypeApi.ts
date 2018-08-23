@@ -25,7 +25,7 @@
 import {XHR} from "./XHR"
 import * as models from '../model/models';
 
-export class iccCalendarItemApi {
+export class iccCalendarItemTypeApi {
   host: string
   headers: Array<XHR.Header>
 
@@ -44,25 +44,24 @@ export class iccCalendarItemApi {
     else throw Error('api-error' + e.status)
   }
 
-  // region calendar item
-  createCalendarItem(body?: models.CalendarItemDto): Promise<models.CalendarItemDto | any> {
+  createCalendarItemType(body?: models.CalendarItemTypeDto): Promise<models.CalendarItemTypeDto | any> {
     let _body = null
     _body = body
 
-    const _url = this.host + "/calendarItem" + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItemType" + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('POST', _url, this.headers, _body)
-      .then(doc => new models.CalendarItemDto(doc.body as JSON))
+      .then(doc => new models.CalendarItemTypeDto(doc.body as JSON))
       .catch(err => this.handleError(err))
 
 
   }
 
-  deleteCalendarItems(contactIds: string): Promise<Array<string> | any> {
+  deleteCalendarItemTypes(calendarItemTypeIds: string): Promise<Array<string> | any> {
     let _body = null
 
 
-    const _url = this.host + "/calendarItem/{contactIds}".replace("{contactIds}", contactIds + "") + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItemType/{calendarItemTypeIds}".replace("{calendarItemTypeIds}", calendarItemTypeIds + "") + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('DELETE', _url, this.headers, _body)
       .then(doc => (doc.body as Array<JSON>).map(it => JSON.parse(JSON.stringify(it))))
@@ -71,58 +70,39 @@ export class iccCalendarItemApi {
 
   }
 
-  getCalendarItem(calendarItemId: string): Promise<models.CalendarItemDto | any> {
+  getCalendarItemType(calendarItemTypeId: string): Promise<models.CalendarItemTypeDto | any> {
     let _body = null
 
-    const _url = this.host + "/calendarItem/{calendarItemId}".replace("{calendarItemId}", calendarItemId + "") + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItemType/{calendarItemTypeId}".replace("{calendarItemTypeId}", calendarItemTypeId + "") + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('GET', _url, this.headers, _body)
-      .then(doc => new models.CalendarItemDto(doc.body as JSON))
+      .then(doc => new models.CalendarItemTypeDto(doc.body as JSON))
       .catch(err => this.handleError(err))
 
 
   }
 
-  getCalendarItems(body?: models.ListOfIdsDto): Promise<Array<models.CalendarItemDto> | any> {
-    let _body = null
-    _body = body
+  getCalendarItemTypes(): Promise<Array<models.CalendarItemTypeDto> | any> {
+    const _url = this.host + "/calendarItemType" + "?ts=" + (new Date).getTime()
 
-    const _url = this.host + "/calendarItem/byIds" + "?ts=" + (new Date).getTime()
-
-    return XHR.sendCommand('POST', _url, this.headers, _body)
-      .then(doc => (doc.body as Array<JSON>).map(it => new models.CalendarItemDto(it)))
+    return XHR.sendCommand('GET', _url, this.headers)
+      .then(doc => (doc.body as Array<JSON>).map(it => new models.CalendarItemTypeDto(it)))
       .catch(err => this.handleError(err))
 
 
   }
 
-  modifyCalendarItem(body?: models.CalendarItemDto): Promise<models.CalendarItemDto | any> {
+  modifyCalendarItemType(body?: models.CalendarItemTypeDto): Promise<models.CalendarItemTypeDto | any> {
     let _body = null
     _body = body
 
-    const _url = this.host + "/calendarItem" + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItemType" + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('PUT', _url, this.headers, _body)
-      .then(doc => new models.CalendarItemDto(doc.body as JSON))
+      .then(doc => new models.CalendarItemTypeDto(doc.body as JSON))
       .catch(err => this.handleError(err))
 
 
   }
-  //endregion
-
-  //region hcparty
-  byPeriodAndHcPartyId(startDate: number, endDate: number, hcPartyId: string): Promise<Array<models.CalendarItemDto> | any> {
-    let _body = null;
-
-    const _url = this.host + "/calendarItem/byPeriodAndHcPartyId" + "?ts=" + (new Date).getTime()
-      + (startDate ? "&startDate=" + startDate : "")
-      + (endDate ? "&endDate=" + endDate : "")
-      + (hcPartyId ? "&hcPartyId=" + hcPartyId : "");
-
-    return XHR.sendCommand('POST', _url, this.headers, _body)
-      .then(doc => (doc.body as Array<JSON>).map(it => new models.CalendarItemDto(it)))
-      .catch(err => this.handleError(err));
-  }
-  //endregion
 }
 

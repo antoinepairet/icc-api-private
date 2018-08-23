@@ -22,21 +22,47 @@
  * limitations under the License.
  */
 
-import {IcureStubDto} from "./models";
-import {TimeTableItemDto} from "./TimeTableItemDto";
+import * as models from '../model/models';
 
-export class TimeTableDto extends IcureStubDto{
+export class TimeTableDto {
   constructor(json: JSON | any) {
-    super(json);
     Object.assign(this as TimeTableDto, json)
   }
 
+  id?: string;
+
+  rev?: string;
+
+  deletionDate?: number;
+
+  created?: number;
+
+  modified?: number;
+
+  endOfLife?: number;
+
+  author?: string;
+
+  responsible?: string;
+
+  codes?: Array<models.CodeDto>;
+
+  tags?: Array<models.CodeDto>;
+
+  secretForeignKeys?: Array<string>;
+
+  cryptedForeignKeys?: { [key: string]: Array<models.DelegationDto>; };
+
+  delegations?: { [key: string]: Array<models.DelegationDto>; };
+
   name?: string;
+
+  agendaId?: string;
 
   startTime?: number;
 
   endTime?: number;
 
-  items?: Array<TimeTableItemDto>;
+  items?: Array<models.TimeTableItemDto>;
 
 }

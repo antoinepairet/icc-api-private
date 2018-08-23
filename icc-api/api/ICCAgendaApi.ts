@@ -25,7 +25,7 @@
 import {XHR} from "./XHR"
 import * as models from '../model/models';
 
-export class iccCalendarItemTypeApi {
+export class iccAgendaApi {
   host: string
   headers: Array<XHR.Header>
 
@@ -44,24 +44,24 @@ export class iccCalendarItemTypeApi {
     else throw Error('api-error' + e.status)
   }
 
-  createCalendarItemType(body?: models.CalendarItemTypeDto): Promise<models.CalendarItemTypeDto | any> {
+  createAgenda(body?: models.AgendaDto): Promise<models.AgendaDto | any> {
     let _body = null
     _body = body
 
-    const _url = this.host + "/calendarItemType" + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/agenda" + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('POST', _url, this.headers, _body)
-      .then(doc => new models.CalendarItemTypeDto(doc.body as JSON))
+      .then(doc => new models.AgendaDto(doc.body as JSON))
       .catch(err => this.handleError(err))
 
 
   }
 
-  deleteCalendarItemTypes(calendarItemTypeIds: string): Promise<Array<string> | any> {
+  deleteAgendas(agendaIds: string): Promise<Array<string> | any> {
     let _body = null
 
 
-    const _url = this.host + "/calendarItemType/{calendarItemTypeIds}".replace("{calendarItemTypeIds}", calendarItemTypeIds + "") + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/agenda/{agendaIds}".replace("{agendaIds}", agendaIds + "") + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('DELETE', _url, this.headers, _body)
       .then(doc => (doc.body as Array<JSON>).map(it => JSON.parse(JSON.stringify(it))))
@@ -70,39 +70,61 @@ export class iccCalendarItemTypeApi {
 
   }
 
-  getCalendarItemType(calendarItemTypeId: string): Promise<models.CalendarItemTypeDto | any> {
+  getAgenda(agendaId: string): Promise<models.AgendaDto | any> {
     let _body = null
 
-    const _url = this.host + "/calendarItemType/{calendarItemTypeId}".replace("{calendarItemTypeId}", calendarItemTypeId + "") + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/agenda/{agendaId}".replace("{agendaId}", agendaId + "") + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('GET', _url, this.headers, _body)
-      .then(doc => new models.CalendarItemTypeDto(doc.body as JSON))
+      .then(doc => new models.AgendaDto(doc.body as JSON))
       .catch(err => this.handleError(err))
 
 
   }
 
-  getCalendarItemTypes(): Promise<Array<models.CalendarItemTypeDto> | any> {
-    const _url = this.host + "/calendarItemType" + "?ts=" + (new Date).getTime()
+  getAgendas(): Promise<Array<models.AgendaDto> | any> {
+    const _url = this.host + "/agenda" + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('GET', _url, this.headers)
-      .then(doc => (doc.body as Array<JSON>).map(it => new models.CalendarItemTypeDto(it)))
+      .then(doc => (doc.body as Array<JSON>).map(it => new models.AgendaDto(it)))
       .catch(err => this.handleError(err))
 
 
   }
 
-  modifyCalendarItemType(body?: models.CalendarItemTypeDto): Promise<models.CalendarItemTypeDto | any> {
+  modifyAgenda(body?: models.AgendaDto): Promise<models.AgendaDto | any> {
     let _body = null
     _body = body
 
-    const _url = this.host + "/calendarItemType" + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/agenda" + "?ts=" + (new Date).getTime()
 
     return XHR.sendCommand('PUT', _url, this.headers, _body)
-      .then(doc => new models.CalendarItemTypeDto(doc.body as JSON))
+      .then(doc => new models.AgendaDto(doc.body as JSON))
       .catch(err => this.handleError(err))
 
 
+  }
+
+  byUser(userId: string): Promise<models.AgendaDto | any> {
+    let _body = null;
+
+    const _url = this.host + "/agenda/byUser" + "?ts=" + (new Date).getTime()
+      + (userId ? "&userId=" + userId : "");
+
+    return XHR.sendCommand('GET', _url, this.headers, _body)
+      .then(doc => new models.AgendaDto(doc.body as JSON))
+      .catch(err => this.handleError(err));
+  }
+
+  readableForUser(userId: string): Promise<Array<models.AgendaDto> | any> {
+    let _body = null;
+
+    const _url = this.host + "/agenda/readableForUser" + "?ts=" + (new Date).getTime()
+      + (userId ? "&userId=" + userId : "");
+
+    return XHR.sendCommand('GET', _url, this.headers, _body)
+      .then(doc => (doc.body as Array<JSON>).map(it => new models.AgendaDto(it)))
+      .catch(err => this.handleError(err));
   }
 }
 

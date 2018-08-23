@@ -22,24 +22,20 @@
  * limitations under the License.
  */
 
-import {TimeTableHourDto} from "./TimeTableHourDto";
+import {AddressDto} from "./AddressDto";
 
-export class TimeTableItemDto{
+export class PlaceDto {
 
   constructor(json: JSON | any) {
-    Object.assign(this as TimeTableItemDto, json)
+    Object.assign(this as PlaceDto, json)
   }
 
-  days?: Array<string>;
+  id?: string;
 
-  hours?: Array<TimeTableHourDto>;
+  rev?: string;
 
-  recurrenceTypes?: Array<string>;
+  name?: string;
 
-  activityType?: string;
-
-  place?: PlaceDto;
-
-  homeVisit?: boolean;
+  address?: AddressDto;
 
 }

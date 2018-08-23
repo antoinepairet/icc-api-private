@@ -22,20 +22,14 @@
  * limitations under the License.
  */
 
-import {IcureStubDto} from "./models";
-
-export class TimeTableItemDto{
+export class TimeTableHourDto{
 
   constructor(json: JSON | any) {
-    Object.assign(this as TimeTableItemDto, json)
+    Object.assign(this as TimeTableHourDto, json)
   }
 
-  days?: Array<string>;
+  startHour?: number;
 
-  hours?: Array<TimeTableHourDto>;
-
-  recurrenceType?: string;
-
-  activityType?: string;
+  endHour?: number;
 
 }

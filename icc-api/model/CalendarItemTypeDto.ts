@@ -23,11 +23,10 @@
  */
 
 import * as models from './models';
-import {RightDto} from "./RightDto";
 
-export class AgendaDto {
+export class CalendarItemTypeDto {
   constructor(json: JSON | any) {
-    Object.assign(this as AgendaDto, json)
+    Object.assign(this as CalendarItemTypeDto, json)
   }
 
   id?: string;
@@ -36,8 +35,8 @@ export class AgendaDto {
 
   name?: string;
 
-  userId?: string;
+  color?: string;
 
-  rights?: Array<RightDto>;
+  duration?: number;
 
 }
