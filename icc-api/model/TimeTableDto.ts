@@ -57,6 +57,8 @@ export class TimeTableDto {
 
   name?: string;
 
+  agendaId?: string;
+
   startTime?: number;
 
   endTime?: number;

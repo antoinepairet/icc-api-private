@@ -106,6 +106,7 @@ export class IccCryptoXApi {
     healthcarePartyId: string,
     delegations: { [key: string]: Array<models.DelegationDto> }
   ): Promise<Array<{ delegatorId: string; key: CryptoKey }>> {
+    debugger;
     const delegatorIds: { [key: string]: boolean } = {}
     if (delegations[healthcarePartyId]) {
       delegations[healthcarePartyId].forEach(function(delegation) {
@@ -307,6 +308,7 @@ export class IccCryptoXApi {
     encryptionKeys: { [key: string]: Array<models.DelegationDto> }
     secretId: string | null
   }> {
+    debugger;
     if (!secretIdOfModifiedObject) {
       return Promise.resolve({ encryptionKeys: modifiedObject.encryptionKeys, secretId: null })
     }

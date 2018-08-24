@@ -23,6 +23,8 @@
  */
 
 import * as models from './models';
+import {AddressDto, CalendarItemTypeDto, PlaceDto} from "./models";
+import {CalendarItemTagDto} from "./CalendarItemTagDto";
 
 export class CalendarItemDto {
   constructor(json: JSON | any) {
@@ -59,14 +61,34 @@ export class CalendarItemDto {
 
   title?: string;
 
-  type?: string;
+  calendarItemTypeId?: string;
+
+  patientId?: string;
+
+  important?: boolean;
+
+  homeVisit?: boolean;
+
+  phoneNumber?: string;
+
+  placeId?: string;
+
+  address?: AddressDto;
+
+  addressText?: string;
 
   startTime?: number;
 
   endTime?: number;
 
-  patient?: string;
+  duration?: number;
 
-  note?: string;
+  allDay?: boolean;
+
+  details?: string;
+
+  agendaId?: string;
+
+  meetingTags?: Array<CalendarItemTagDto>;
 
 }

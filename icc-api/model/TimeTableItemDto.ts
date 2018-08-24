@@ -23,8 +23,9 @@
  */
 
 import {TimeTableHourDto} from "./TimeTableHourDto";
+import {PlaceDto} from "./PlaceDto";
 
-export class TimeTableItemDto{
+export class TimeTableItemDto {
 
   constructor(json: JSON | any) {
     Object.assign(this as TimeTableItemDto, json)
@@ -34,8 +35,12 @@ export class TimeTableItemDto{
 
   hours?: Array<TimeTableHourDto>;
 
-  recurrenceType?: string;
+  recurrenceTypes?: Array<string>;
 
-  activityType?: string;
+  calendarItemTypeId?: string;
+
+  placeId?: string;
+
+  homeVisit?: boolean;
 
 }
