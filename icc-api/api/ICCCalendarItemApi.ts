@@ -22,10 +22,10 @@
  * limitations under the License.
  */
 
-import {XHR} from "./XHR"
-import * as models from '../model/models';
+import { XHR } from "./XHR"
+import * as models from "../model/models"
 
-export class iccCalendarItemApi {
+export class ICCCalendarItemApi {
   host: string
   headers: Array<XHR.Header>
 
@@ -35,13 +35,12 @@ export class iccCalendarItemApi {
   }
 
   setHeaders(h: Array<XHR.Header>) {
-    this.headers = h;
+    this.headers = h
   }
 
-
   handleError(e: XHR.Data) {
-    if (e.status == 401) throw Error('auth-failed')
-    else throw Error('api-error' + e.status)
+    if (e.status == 401) throw Error("auth-failed")
+    else throw Error("api-error" + e.status)
   }
 
   // region calendar item
@@ -49,78 +48,82 @@ export class iccCalendarItemApi {
     let _body = null
     _body = body
 
-    const _url = this.host + "/calendarItem" + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItem" + "?ts=" + new Date().getTime()
 
-    return XHR.sendCommand('POST', _url, this.headers, _body)
+    return XHR.sendCommand("POST", _url, this.headers, _body)
       .then(doc => new models.CalendarItemDto(doc.body as JSON))
       .catch(err => this.handleError(err))
-
-
   }
 
   deleteCalendarItems(calendarItemIds: string): Promise<Array<string> | any> {
     let _body = null
 
+    const _url =
+      this.host +
+      "/calendarItem/{calendarItemIds}".replace("{calendarItemIds}", calendarItemIds + "") +
+      "?ts=" +
+      new Date().getTime()
 
-    const _url = this.host + "/calendarItem/{calendarItemIds}".replace("{calendarItemIds}", calendarItemIds + "") + "?ts=" + (new Date).getTime()
-
-    return XHR.sendCommand('DELETE', _url, this.headers, _body)
+    return XHR.sendCommand("DELETE", _url, this.headers, _body)
       .then(doc => (doc.body as Array<JSON>).map(it => JSON.parse(JSON.stringify(it))))
       .catch(err => this.handleError(err))
-
-
   }
 
   getCalendarItem(calendarItemId: string): Promise<models.CalendarItemDto | any> {
     let _body = null
 
-    const _url = this.host + "/calendarItem/{calendarItemId}".replace("{calendarItemId}", calendarItemId + "") + "?ts=" + (new Date).getTime()
+    const _url =
+      this.host +
+      "/calendarItem/{calendarItemId}".replace("{calendarItemId}", calendarItemId + "") +
+      "?ts=" +
+      new Date().getTime()
 
-    return XHR.sendCommand('GET', _url, this.headers, _body)
+    return XHR.sendCommand("GET", _url, this.headers, _body)
       .then(doc => new models.CalendarItemDto(doc.body as JSON))
       .catch(err => this.handleError(err))
-
-
   }
 
   getCalendarItems(body?: models.ListOfIdsDto): Promise<Array<models.CalendarItemDto> | any> {
     let _body = null
     _body = body
 
-    const _url = this.host + "/calendarItem/byIds" + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItem/byIds" + "?ts=" + new Date().getTime()
 
-    return XHR.sendCommand('POST', _url, this.headers, _body)
+    return XHR.sendCommand("POST", _url, this.headers, _body)
       .then(doc => (doc.body as Array<JSON>).map(it => new models.CalendarItemDto(it)))
       .catch(err => this.handleError(err))
-
-
   }
 
   modifyCalendarItem(body?: models.CalendarItemDto): Promise<models.CalendarItemDto | any> {
     let _body = null
     _body = body
 
-    const _url = this.host + "/calendarItem" + "?ts=" + (new Date).getTime()
+    const _url = this.host + "/calendarItem" + "?ts=" + new Date().getTime()
 
-    return XHR.sendCommand('PUT', _url, this.headers, _body)
+    return XHR.sendCommand("PUT", _url, this.headers, _body)
       .then(doc => new models.CalendarItemDto(doc.body as JSON))
       .catch(err => this.handleError(err))
-
-
   }
   //endregion
 
-  byPeriodAndAgendaId(startDate: number, endDate: number, agendaId: string): Promise<Array<models.CalendarItemDto> | any> {
-    let _body = null;
+  byPeriodAndAgendaId(
+    startDate: number,
+    endDate: number,
+    agendaId: string
+  ): Promise<Array<models.CalendarItemDto> | any> {
+    let _body = null
 
-    const _url = this.host + "/calendarItem/byPeriodAndAgendaId" + "?ts=" + (new Date).getTime()
-      + (startDate ? "&startDate=" + startDate : "")
-      + (endDate ? "&endDate=" + endDate : "")
-      + (agendaId ? "&agendaId=" + agendaId : "");
+    const _url =
+      this.host +
+      "/calendarItem/byPeriodAndAgendaId" +
+      "?ts=" +
+      new Date().getTime() +
+      (startDate ? "&startDate=" + startDate : "") +
+      (endDate ? "&endDate=" + endDate : "") +
+      (agendaId ? "&agendaId=" + agendaId : "")
 
-    return XHR.sendCommand('POST', _url, this.headers, _body)
+    return XHR.sendCommand("POST", _url, this.headers, _body)
       .then(doc => (doc.body as Array<JSON>).map(it => new models.CalendarItemDto(it)))
-      .catch(err => this.handleError(err));
+      .catch(err => this.handleError(err))
   }
 }
-
