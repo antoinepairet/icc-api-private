@@ -26,4 +26,8 @@ export class FlowItem {
   patientLastName?: string;
 
   status?: string;
+
+  cancellationReason?: string;
+
+  cancellationNote?: string;
 }
