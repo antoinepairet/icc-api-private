@@ -1,9 +1,8 @@
-import { IccCryptoXApi } from "../icc-x-api/icc-crypto-x-api";
-
 import * as i18n from "./rsrc/contact.i18n";
 
 import * as _ from 'lodash';
-import {iccTimeTableApi} from "..";
+import { iccTimeTableApi } from "../icc-api/api/ICCTimeTableApi"
+import { IccCryptoXApi } from "./icc-crypto-x-api"
 
 export class IccTimeTableXApi extends iccTimeTableApi {
 
